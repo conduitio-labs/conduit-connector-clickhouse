@@ -81,30 +81,37 @@ func ConvertStructureData(
 
 		switch t := columnTypes[key]; {
 		case strings.Contains(t, chTypeDate), strings.Contains(t, chTypeDateTime):
-			timeValue, ok := value.(time.Time)
-			if ok {
-				result[key] = timeValue.Format(layoutDateTime)
-
-				continue
-			}
-
-			valueStr, ok := value.(string)
-			if !ok {
-				return nil, errValueIsNotAString
-			}
-
-			timeValue, err := parseTime(valueStr)
+			timeStr, err := formatDatetime(value)
 			if err != nil {
-				return nil, fmt.Errorf("convert value to time.Time: %w", err)
+				return nil, fmt.Errorf("format datetime value: %w", err)
 			}
 
-			result[key] = timeValue.Format(layoutDateTime)
+			result[key] = timeStr
 		default:
 			result[key] = value
 		}
 	}
 
 	return result, nil
+}
+
+func formatDatetime(value any) (string, error) {
+	timeValue, ok := value.(time.Time)
+	if ok {
+		return timeValue.Format(layoutDateTime), nil
+	}
+
+	valueStr, ok := value.(string)
+	if !ok {
+		return "", errValueIsNotAString
+	}
+
+	timeValue, err := parseTime(valueStr)
+	if err != nil {
+		return "", fmt.Errorf("convert value to time.Time: %w", err)
+	}
+
+	return timeValue.Format(layoutDateTime), nil
 }
 
 func parseTime(val string) (time.Time, error) {
