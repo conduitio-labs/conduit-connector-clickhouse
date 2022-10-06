@@ -6,7 +6,9 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.3.0
 	github.com/conduitio/conduit-connector-sdk v0.3.0
 	github.com/go-playground/validator/v10 v10.11.1
+	github.com/golang/mock v1.6.0
 	github.com/jmoiron/sqlx v1.3.5
+	github.com/matryer/is v1.4.0
 	go.uber.org/multierr v1.8.0
 )
 
@@ -27,7 +29,6 @@ require (
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
