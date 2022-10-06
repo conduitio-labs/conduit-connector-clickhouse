@@ -17,7 +17,6 @@ package writer
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -38,14 +37,6 @@ const (
 	coma        = ","
 	placeholder = "?"
 	operatorAnd = " AND "
-)
-
-var (
-	// errEmptyPayload occurs when there's no payload to insert or update.
-	errNoPayload = errors.New("no payload")
-
-	// errKeyNotFound occurs when one key from primaryColumns configuration field not found or has the empty value.
-	errKeyNotFound = errors.New("key not found")
 )
 
 // Writer implements a writer logic for ClickHouse destination.
@@ -255,7 +246,8 @@ func (w *Writer) getKeyColumns(key sdk.StructuredData) ([]string, error) {
 	if len(w.primaryColumns) > 0 {
 		for i := range w.primaryColumns {
 			if val, ok := key[w.primaryColumns[i]]; !ok && val != nil {
-				return nil, errKeyNotFound
+				return nil, fmt.Errorf("the primary key %q is not found in the Key of sdk.Record, or has a null value",
+					w.primaryColumns[i])
 			}
 
 			keyColumns = append(keyColumns, w.primaryColumns[i])
