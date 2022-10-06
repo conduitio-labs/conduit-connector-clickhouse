@@ -15,6 +15,7 @@
 package clickhouse
 
 import (
+	"github.com/conduitio-labs/conduit-connector-clickhouse/destination"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -22,5 +23,5 @@ import (
 var Connector = sdk.Connector{
 	NewSpecification: Specification,
 	NewSource:        nil,
-	NewDestination:   nil,
+	NewDestination:   destination.NewDestination,
 }
