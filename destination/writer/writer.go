@@ -74,14 +74,12 @@ func New(ctx context.Context, params Params) (*Writer, error) {
 
 // Write writes a sdk.Record into a Destination.
 func (w *Writer) Write(ctx context.Context, record sdk.Record) error {
-	switch record.Operation {
-	case sdk.OperationUpdate:
-		return w.update(ctx, record)
-	case sdk.OperationDelete:
-		return w.delete(ctx, record)
-	default:
-		return w.insert(ctx, record)
-	}
+	return sdk.Util.Destination.Route(ctx, record,
+		w.insert,
+		w.update,
+		w.delete,
+		w.insert,
+	)
 }
 
 // inserts a record.

@@ -30,6 +30,7 @@ func TestWriter_WriteFailNoPayload(t *testing.T) {
 	w := Writer{}
 
 	record := sdk.Record{
+		Operation: sdk.OperationCreate,
 		Key: sdk.StructuredData{
 			"id": 1,
 		},
