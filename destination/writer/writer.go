@@ -21,8 +21,8 @@ import (
 	"strings"
 
 	"github.com/conduitio-labs/conduit-connector-clickhouse/columntypes"
-	"github.com/conduitio-labs/conduit-connector-clickhouse/repository"
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -41,7 +41,7 @@ const (
 
 // Writer implements a writer logic for ClickHouse destination.
 type Writer struct {
-	repo           *repository.ClickHouse
+	db             *sqlx.DB
 	table          string
 	primaryColumns []string
 	columnTypes    map[string]string
@@ -49,7 +49,7 @@ type Writer struct {
 
 // Params is an incoming params for the New function.
 type Params struct {
-	Repo           *repository.ClickHouse
+	DB             *sqlx.DB
 	Table          string
 	PrimaryColumns []string
 }
@@ -57,12 +57,12 @@ type Params struct {
 // New creates new instance of the Writer.
 func New(ctx context.Context, params Params) (*Writer, error) {
 	writer := &Writer{
-		repo:           params.Repo,
+		db:             params.DB,
 		table:          params.Table,
 		primaryColumns: params.PrimaryColumns,
 	}
 
-	columnTypes, err := columntypes.GetColumnTypes(ctx, writer.repo, writer.table)
+	columnTypes, err := columntypes.GetColumnTypes(ctx, writer.db, writer.table)
 	if err != nil {
 		return nil, fmt.Errorf("get column types: %w", err)
 	}
@@ -131,7 +131,7 @@ func (w *Writer) insert(ctx context.Context, record sdk.Record) error {
 
 	query := fmt.Sprintf(insertFmt, tableName, strings.Join(columns, coma), strings.Join(placeholders, coma))
 
-	_, err = w.repo.DB.ExecContext(ctx, query, values...)
+	_, err = w.db.ExecContext(ctx, query, values...)
 	if err != nil {
 		return fmt.Errorf("exec insert %q, %v: %w", query, values, err)
 	}
@@ -188,7 +188,7 @@ func (w *Writer) update(ctx context.Context, record sdk.Record) error {
 
 	query := fmt.Sprintf(updateFmt, tableName, strings.Join(updateColumns, coma), strings.Join(whereClauses, operatorAnd))
 
-	_, err = w.repo.DB.ExecContext(ctx, query, values...)
+	_, err = w.db.ExecContext(ctx, query, values...)
 	if err != nil {
 		return fmt.Errorf("exec update %q, %v: %w", query, values, err)
 	}
@@ -219,7 +219,7 @@ func (w *Writer) delete(ctx context.Context, record sdk.Record) error {
 
 	query := fmt.Sprintf(deleteFmt, tableName, strings.Join(whereClauses, operatorAnd))
 
-	_, err = w.repo.DB.ExecContext(ctx, query, values...)
+	_, err = w.db.ExecContext(ctx, query, values...)
 	if err != nil {
 		return fmt.Errorf("exec delete %q, %v: %w", query, values, err)
 	}

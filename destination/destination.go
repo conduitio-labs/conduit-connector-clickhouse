@@ -20,8 +20,11 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/writer"
-	"github.com/conduitio-labs/conduit-connector-clickhouse/repository"
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/jmoiron/sqlx"
+
+	// Go driver for ClickHouse.
+	_ "github.com/ClickHouse/clickhouse-go/v2"
 )
 
 // Writer defines a writer interface needed for the Destination.
@@ -33,7 +36,7 @@ type Writer interface {
 type Destination struct {
 	sdk.UnimplementedDestination
 
-	repo   *repository.ClickHouse
+	db     *sqlx.DB
 	writer Writer
 	cfg    config.General
 }
@@ -77,13 +80,18 @@ func (d *Destination) Configure(_ context.Context, cfg map[string]string) (err e
 
 // Open initializes a publisher client.
 func (d *Destination) Open(ctx context.Context) (err error) {
-	d.repo, err = repository.New(d.cfg.URL)
+	db, err := sqlx.Open("clickhouse", d.cfg.URL)
 	if err != nil {
-		return fmt.Errorf("new repository: %w", err)
+		return fmt.Errorf("open connection: %w", err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return fmt.Errorf("ping: %w", err)
 	}
 
 	d.writer, err = writer.New(ctx, writer.Params{
-		Repo:           d.repo,
+		DB:             db,
 		Table:          d.cfg.Table,
 		PrimaryColumns: d.cfg.PrimaryColumns,
 	})
@@ -108,5 +116,9 @@ func (d *Destination) Write(ctx context.Context, records []sdk.Record) (int, err
 
 // Teardown gracefully closes connections.
 func (d *Destination) Teardown(ctx context.Context) error {
-	return d.repo.Close()
+	if d.db != nil {
+		return d.db.Close()
+	}
+
+	return nil
 }

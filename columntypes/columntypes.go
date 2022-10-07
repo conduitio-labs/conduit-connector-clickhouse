@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/conduitio-labs/conduit-connector-clickhouse/repository"
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -45,10 +45,10 @@ var timeLayouts = []string{time.RFC3339, time.RFC3339Nano, time.Layout, time.ANS
 	time.RFC3339Nano, time.Kitchen, time.Stamp, time.StampMilli, time.StampMicro, time.StampNano}
 
 // GetColumnTypes returns a map containing the names and types of the table columns.
-func GetColumnTypes(ctx context.Context, repo *repository.ClickHouse, tableName string) (map[string]string, error) {
+func GetColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[string]string, error) {
 	dest := make(map[string]any)
 
-	rows, err := repo.DB.QueryxContext(ctx, fmt.Sprintf(queryDescribeTable, tableName))
+	rows, err := db.QueryxContext(ctx, fmt.Sprintf(queryDescribeTable, tableName))
 	if err != nil {
 		return nil, fmt.Errorf("query column types: %w", err)
 	}
