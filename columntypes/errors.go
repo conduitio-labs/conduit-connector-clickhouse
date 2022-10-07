@@ -12,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clickhouse
+package columntypes
 
-import (
-	"github.com/conduitio-labs/conduit-connector-clickhouse/destination"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+import "errors"
+
+var (
+	// errInvalidTimeLayout occurs when the time layout is invalid.
+	errInvalidTimeLayout = errors.New("invalid time layout")
+	// errValueIsNotAString occurs when the value is not a string.
+	errValueIsNotAString = errors.New("value is not a string")
 )
-
-// Connector represents a sdk.Connector of ClickHouse.
-var Connector = sdk.Connector{
-	NewSpecification: Specification,
-	NewSource:        nil,
-	NewDestination:   destination.NewDestination,
-}

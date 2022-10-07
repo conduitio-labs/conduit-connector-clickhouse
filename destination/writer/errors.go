@@ -12,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clickhouse
+package writer
 
-import (
-	"github.com/conduitio-labs/conduit-connector-clickhouse/destination"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+import "errors"
+
+var (
+	// errNoPayload occurs when there's no payload to insert or update.
+	errNoPayload = errors.New("no payload")
+	// errEmptyKey occurs when there is no value for key.
+	errEmptyKey = errors.New("key value must be provided")
 )
-
-// Connector represents a sdk.Connector of ClickHouse.
-var Connector = sdk.Connector{
-	NewSpecification: Specification,
-	NewSource:        nil,
-	NewDestination:   destination.NewDestination,
-}

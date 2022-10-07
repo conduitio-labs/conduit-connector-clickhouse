@@ -27,9 +27,9 @@ var version = "v0.0.0-dev"
 func Specification() sdk.Specification {
 	return sdk.Specification{
 		Name:    "clickhouse",
-		Summary: "ClickHouse source and destination plugin for Conduit, written in Go.",
+		Summary: "ClickHouse destination plugin for Conduit, written in Go.",
 		Description: "ClickHouse connector is one of Conduit plugins. " +
-			"It provides a source and a destination ClickHouse connector.",
+			"It provides a destination ClickHouse connector.",
 		Version: version,
 		Author:  "Meroxa, Inc.",
 	}
