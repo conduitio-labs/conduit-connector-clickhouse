@@ -21,9 +21,6 @@ const (
 	URL = "url"
 	// Table is the configuration name of the table.
 	Table = "table"
-	// PrimaryColumns is the configuration name of columns, separated by commas,
-	// with constraints that uniquely identifies each record.
-	PrimaryColumns = "primaryColumns"
 )
 
 // A General represents a general configuration needed to connect to ClickHouse database.
@@ -32,8 +29,6 @@ type General struct {
 	URL string `json:"url" validate:"required"`
 	// Table is the configuration of the table name.
 	Table string `json:"table" validate:"required"`
-	// PrimaryColumns is a slice of columns with constraints that uniquely identifies each record.
-	PrimaryColumns []string
 }
 
 // Parse parses general configuration.
@@ -41,18 +36,6 @@ func Parse(cfg map[string]string) (General, error) {
 	config := General{
 		URL:   strings.TrimSpace(cfg[URL]),
 		Table: strings.TrimSpace(cfg[Table]),
-	}
-
-	if cfg[PrimaryColumns] != "" {
-		primaryColumns := strings.Split(cfg[PrimaryColumns], ",")
-
-		for i := range primaryColumns {
-			if strings.TrimSpace(primaryColumns[i]) == "" {
-				continue
-			}
-
-			config.PrimaryColumns = append(config.PrimaryColumns, strings.TrimSpace(primaryColumns[i]))
-		}
 	}
 
 	err := validate(config)
@@ -66,8 +49,7 @@ func Parse(cfg map[string]string) (General, error) {
 // GetKeyName returns a configuration key name by struct field.
 func GetKeyName(fieldName string) string {
 	return map[string]string{
-		"URL":            URL,
-		"Table":          Table,
-		"PrimaryColumns": PrimaryColumns,
+		"URL":   URL,
+		"Table": Table,
 	}[fieldName]
 }

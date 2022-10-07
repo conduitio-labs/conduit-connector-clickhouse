@@ -34,15 +34,13 @@ func TestDestination_ConfigureSuccess(t *testing.T) {
 	d := Destination{}
 
 	err := d.Configure(context.Background(), map[string]string{
-		config.URL:            "localhost:8123?username=user&password=password&database=default",
-		config.Table:          "test_table",
-		config.PrimaryColumns: "id",
+		config.URL:   "localhost:8123?username=user&password=password&database=default",
+		config.Table: "test_table",
 	})
 	is.NoErr(err)
 	is.Equal(d.cfg, config.General{
-		URL:            "localhost:8123?username=user&password=password&database=default",
-		Table:          "test_table",
-		PrimaryColumns: []string{"id"},
+		URL:   "localhost:8123?username=user&password=password&database=default",
+		Table: "test_table",
 	})
 }
 

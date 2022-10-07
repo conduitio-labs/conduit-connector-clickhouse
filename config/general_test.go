@@ -42,40 +42,23 @@ func TestParseGeneral(t *testing.T) {
 			},
 		},
 		{
-			name: "valid config with primary columns",
-			in: map[string]string{
-				URL:            "http://127.0.0.1:8123?username=test_user&password=test_pass_123&database=db_name",
-				Table:          "test_table",
-				PrimaryColumns: "id,name, created,",
-			},
-			want: General{
-				URL:            "http://127.0.0.1:8123?username=test_user&password=test_pass_123&database=db_name",
-				Table:          "test_table",
-				PrimaryColumns: []string{"id", "name", "created"},
-			},
-		},
-		{
 			name: "url is required",
 			in: map[string]string{
-				Table:          "test_table",
-				PrimaryColumns: "id",
+				Table: "test_table",
 			},
 			err: requiredErr(URL),
 		},
 		{
 			name: "table is required",
 			in: map[string]string{
-				URL:            "test_user/test_pass_123@localhost:1521/db_name",
-				PrimaryColumns: "id",
+				URL: "test_user/test_pass_123@localhost:1521/db_name",
 			},
 			err: requiredErr(Table),
 		},
 		{
 			name: "a couple required fields are empty (a password and an url)",
-			in: map[string]string{
-				PrimaryColumns: "id",
-			},
-			err: multierr.Combine(requiredErr(URL), requiredErr(Table)),
+			in:   map[string]string{},
+			err:  multierr.Combine(requiredErr(URL), requiredErr(Table)),
 		},
 	}
 

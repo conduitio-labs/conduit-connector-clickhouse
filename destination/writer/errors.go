@@ -19,4 +19,6 @@ import "errors"
 var (
 	// errNoPayload occurs when there's no payload to insert or update.
 	errNoPayload = errors.New("no payload")
+	// errEmptyKey occurs when there is no value for key.
+	errEmptyKey = errors.New("key value must be provided")
 )

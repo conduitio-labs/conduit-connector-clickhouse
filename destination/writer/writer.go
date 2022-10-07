@@ -41,25 +41,22 @@ const (
 
 // Writer implements a writer logic for ClickHouse destination.
 type Writer struct {
-	db             *sqlx.DB
-	table          string
-	primaryColumns []string
-	columnTypes    map[string]string
+	db          *sqlx.DB
+	table       string
+	columnTypes map[string]string
 }
 
 // Params is an incoming params for the New function.
 type Params struct {
-	DB             *sqlx.DB
-	Table          string
-	PrimaryColumns []string
+	DB    *sqlx.DB
+	Table string
 }
 
 // NewWriter creates new instance of the Writer.
 func NewWriter(ctx context.Context, params Params) (*Writer, error) {
 	writer := &Writer{
-		db:             params.DB,
-		table:          params.Table,
-		primaryColumns: params.PrimaryColumns,
+		db:    params.DB,
+		table: params.Table,
 	}
 
 	columnTypes, err := columntypes.GetColumnTypes(ctx, writer.db, writer.table)
@@ -89,25 +86,6 @@ func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 	payload, err = columntypes.ConvertStructureData(w.columnTypes, payload)
 	if err != nil {
 		return fmt.Errorf("convert structure data: %w", err)
-	}
-
-	key, err := w.structurizeData(record.Key)
-	if err != nil {
-		// if the key is not structured, we simply ignore it
-		// we'll try to insert just a payload in this case
-		sdk.Logger(ctx).Debug().Msgf("structurize key during insert: %v", err)
-	}
-
-	keyColumns, err := w.getKeyColumns(key)
-	if err != nil {
-		return fmt.Errorf("get key columns: %w", err)
-	}
-
-	// if the record doesn't contain some key column, insert it
-	for i := range keyColumns {
-		if _, ok := payload[keyColumns[i]]; !ok {
-			payload[keyColumns[i]] = key[keyColumns[i]]
-		}
 	}
 
 	columns, values := w.extractColumnsAndValues(payload)
@@ -226,24 +204,13 @@ func (w *Writer) getTableName(metadata map[string]string) string {
 	return tableName
 }
 
-// returns either all the keys of the sdk.Record's Key field,
-// or only the keys, which were set in the primaryColumns configuration field.
+// returns either all the keys of the sdk.Record's Key field.
 func (w *Writer) getKeyColumns(key sdk.StructuredData) ([]string, error) {
-	keyColumns := make([]string, 0, len(w.primaryColumns))
-
-	if len(w.primaryColumns) > 0 {
-		for i := range w.primaryColumns {
-			if val, ok := key[w.primaryColumns[i]]; !ok && val != nil {
-				return nil, fmt.Errorf("the primary key %q is not found in the Key of sdk.Record, or has a null value",
-					w.primaryColumns[i])
-			}
-
-			keyColumns = append(keyColumns, w.primaryColumns[i])
-		}
-
-		return keyColumns, nil
+	if len(key) == 0 {
+		return nil, errEmptyKey
 	}
 
+	keyColumns := make([]string, 0, len(key))
 	for k := range key {
 		keyColumns = append(keyColumns, k)
 	}

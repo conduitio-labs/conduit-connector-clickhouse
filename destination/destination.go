@@ -61,12 +61,6 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 			Required:    true,
 			Description: "The table name of the table in ClickHouse that the connector should write to, by default.",
 		},
-		config.PrimaryColumns: {
-			Default:  "",
-			Required: false,
-			Description: "The list of columns, separated by commas, " +
-				"with constraints that uniquely identifies each record.",
-		},
 	}
 }
 
@@ -93,9 +87,8 @@ func (d *Destination) Open(ctx context.Context) (err error) {
 	}
 
 	d.writer, err = writer.NewWriter(ctx, writer.Params{
-		DB:             db,
-		Table:          d.cfg.Table,
-		PrimaryColumns: d.cfg.PrimaryColumns,
+		DB:    db,
+		Table: d.cfg.Table,
 	})
 	if err != nil {
 		return fmt.Errorf("new writer: %w", err)
