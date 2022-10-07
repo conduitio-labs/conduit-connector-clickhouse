@@ -17,6 +17,6 @@ package writer
 import "errors"
 
 var (
-	// errEmptyPayload occurs when there's no payload to insert or update.
+	// errNoPayload occurs when there's no payload to insert or update.
 	errNoPayload = errors.New("no payload")
 )
