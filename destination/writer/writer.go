@@ -54,8 +54,8 @@ type Params struct {
 	PrimaryColumns []string
 }
 
-// New creates new instance of the Writer.
-func New(ctx context.Context, params Params) (*Writer, error) {
+// NewWriter creates new instance of the Writer.
+func NewWriter(ctx context.Context, params Params) (*Writer, error) {
 	writer := &Writer{
 		db:             params.DB,
 		table:          params.Table,
@@ -72,18 +72,8 @@ func New(ctx context.Context, params Params) (*Writer, error) {
 	return writer, nil
 }
 
-// Write writes a sdk.Record into a Destination.
-func (w *Writer) Write(ctx context.Context, record sdk.Record) error {
-	return sdk.Util.Destination.Route(ctx, record,
-		w.insert,
-		w.update,
-		w.delete,
-		w.insert,
-	)
-}
-
-// inserts a record.
-func (w *Writer) insert(ctx context.Context, record sdk.Record) error {
+// Insert inserts a record.
+func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 	tableName := w.getTableName(record.Metadata)
 
 	payload, err := w.structurizeData(record.Payload.After)
@@ -137,8 +127,8 @@ func (w *Writer) insert(ctx context.Context, record sdk.Record) error {
 	return nil
 }
 
-// updates a record.
-func (w *Writer) update(ctx context.Context, record sdk.Record) error {
+// Update updates a record.
+func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 	tableName := w.getTableName(record.Metadata)
 
 	payload, err := w.structurizeData(record.Payload.After)
@@ -194,8 +184,8 @@ func (w *Writer) update(ctx context.Context, record sdk.Record) error {
 	return nil
 }
 
-// deletes a record.
-func (w *Writer) delete(ctx context.Context, record sdk.Record) error {
+// Delete deletes a record.
+func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
 	tableName := w.getTableName(record.Metadata)
 
 	key, err := w.structurizeData(record.Key)

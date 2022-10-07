@@ -29,7 +29,9 @@ import (
 
 // Writer defines a writer interface needed for the Destination.
 type Writer interface {
-	Write(context.Context, sdk.Record) error
+	Insert(context.Context, sdk.Record) error
+	Update(context.Context, sdk.Record) error
+	Delete(context.Context, sdk.Record) error
 }
 
 // A Destination represents the destination connector.
@@ -72,7 +74,7 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 func (d *Destination) Configure(_ context.Context, cfg map[string]string) (err error) {
 	d.cfg, err = config.Parse(cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse config: %w", err)
 	}
 
 	return nil
@@ -90,7 +92,7 @@ func (d *Destination) Open(ctx context.Context) (err error) {
 		return fmt.Errorf("ping: %w", err)
 	}
 
-	d.writer, err = writer.New(ctx, writer.Params{
+	d.writer, err = writer.NewWriter(ctx, writer.Params{
 		DB:             db,
 		Table:          d.cfg.Table,
 		PrimaryColumns: d.cfg.PrimaryColumns,
@@ -104,10 +106,15 @@ func (d *Destination) Open(ctx context.Context) (err error) {
 
 // Write writes records into a Destination.
 func (d *Destination) Write(ctx context.Context, records []sdk.Record) (int, error) {
-	for i, r := range records {
-		err := d.writer.Write(ctx, r)
+	for i, record := range records {
+		err := sdk.Util.Destination.Route(ctx, record,
+			d.writer.Insert,
+			d.writer.Update,
+			d.writer.Delete,
+			d.writer.Insert,
+		)
 		if err != nil {
-			return i, err
+			return i, fmt.Errorf("route %s: %w", record.Operation.String(), err)
 		}
 	}
 

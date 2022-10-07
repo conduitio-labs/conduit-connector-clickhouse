@@ -100,7 +100,7 @@ func TestDestination_WriteSuccess(t *testing.T) {
 
 	w := mock.NewMockWriter(ctrl)
 	for i := range records {
-		w.EXPECT().Write(ctx, records[i]).Return(nil)
+		w.EXPECT().Insert(ctx, records[i]).Return(nil)
 	}
 
 	d := Destination{
