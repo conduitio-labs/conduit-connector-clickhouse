@@ -23,8 +23,7 @@ the environment variables as an `CLICKHOUSE_URL`.
 
 ## Destination
 
-The ClickHouse Destination takes a `sdk.Record` and parses it into a valid SQL query. The Destination is designed to
-handle different payloads and keys. Because of this, each record is individually parsed and upserted.
+The ClickHouse Destination takes a `sdk.Record` and parses it into a valid SQL query.
 
 ### Table name
 
