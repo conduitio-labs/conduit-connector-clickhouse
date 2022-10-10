@@ -24,10 +24,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
 	"github.com/matryer/is"
+
+	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 )
 
 func TestDestination_Write(t *testing.T) {
@@ -330,7 +331,6 @@ func getStringFieldByIntField(db *sqlx.DB, table string, id int) (string, error)
 }
 
 // randString generates a random string of length n.
-// (source: https://stackoverflow.com/a/47676287)
 func randString(n int) string {
 	b := make([]byte, n)
 	rand.Read(b) //nolint:errcheck // does not actually fail
