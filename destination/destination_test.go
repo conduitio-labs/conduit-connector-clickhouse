@@ -64,30 +64,31 @@ func TestDestination_WriteSuccess(t *testing.T) {
 	metadata := sdk.Metadata{}
 	metadata.SetCreatedAt(time.Now())
 
-	records := make([]sdk.Record, 2)
-	records[0] = sdk.Record{
-		Operation: sdk.OperationSnapshot,
-		Metadata:  metadata,
-		Key: sdk.StructuredData{
-			"id": 1,
-		},
-		Payload: sdk.Change{
-			After: sdk.StructuredData{
-				"id":   1,
-				"name": "John",
+	records := []sdk.Record{
+		{
+			Operation: sdk.OperationSnapshot,
+			Metadata:  metadata,
+			Key: sdk.StructuredData{
+				"id": 1,
+			},
+			Payload: sdk.Change{
+				After: sdk.StructuredData{
+					"id":   1,
+					"name": "John",
+				},
 			},
 		},
-	}
-	records[1] = sdk.Record{
-		Operation: sdk.OperationCreate,
-		Metadata:  metadata,
-		Key: sdk.StructuredData{
-			"id": 2,
-		},
-		Payload: sdk.Change{
-			After: sdk.StructuredData{
-				"id":   2,
-				"name": "Sam",
+		{
+			Operation: sdk.OperationCreate,
+			Metadata:  metadata,
+			Key: sdk.StructuredData{
+				"id": 2,
+			},
+			Payload: sdk.Change{
+				After: sdk.StructuredData{
+					"id":   2,
+					"name": "Sam",
+				},
 			},
 		},
 	}
