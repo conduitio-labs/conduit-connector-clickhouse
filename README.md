@@ -5,12 +5,12 @@
 ClickHouse connector is one of [Conduit](https://github.com/ConduitIO/conduit) plugins. It provides a destination
 ClickHouse connector.
 
+Connector uses [Golang SQL database driver](https://github.com/ClickHouse/clickhouse-go) for Yandex ClickHouse.
+
 ## Prerequisites
 
 - [Go](https://go.dev/) 1.18
-- [Golang SQL database client for ClickHouse](https://github.com/ClickHouse/clickhouse-go) 2.3.0
 - (optional) [golangci-lint](https://github.com/golangci/golangci-lint) 1.49.0
-- (optional) [mock](https://github.com/golang/mock) 1.6.0
 
 ## How to build it
 
@@ -18,12 +18,12 @@ Run `make build`.
 
 ## Testing
 
-Run `make test` to run all unit and integration tests. To pass the integration test, set the ClickHouse database URL to
+Run `make test` to run all unit and integration tests. To run the integration test, set the ClickHouse database URL to
 the environment variables as an `CLICKHOUSE_URL`.
 
 ## Destination
 
-The ClickHouse Destination takes a `sdk.Record` and parses it into a valid SQL query.
+The destination connector allows you to move data from any Conduit Source to a ClickHouse table.
 
 ### Table name
 
@@ -33,7 +33,7 @@ connector, as long as the user has proper access to those tables.
 
 ### Configuration Options
 
-| name        | description                                                                        | required | example                                                           |
-|-------------|------------------------------------------------------------------------------------|----------|-------------------------------------------------------------------|
-| `url`       | string line for connection to ClickHouse                                           | **true** | `localhost:8123?username=user&password=password&database=default` |
-| `table`     | the name of a table in the database that the connector should write to, by default | **true** | `users`                                                           |
+| name        | description                                                                           | required | example                                        |
+|-------------|---------------------------------------------------------------------------------------|----------|------------------------------------------------|
+| `url`       | the [DSN](https://github.com/ClickHouse/clickhouse-go#dsn) to connect to the database | **true** | `http://username:password@host1:8123/database` |
+| `table`     | the name of a table in the database that the connector should write to, by default    | **true** | `table_name`                                   |
