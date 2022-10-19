@@ -29,7 +29,9 @@ const (
 	// metadata key with the name of the table.
 	metadataTable = "clickhouse.table"
 
-	// query patterns.
+	// query templates to generate queries manually.
+	// SQL-builders are not used because ClickHouse does not have its own,
+	// and foreign ones are not suitable because of differences in syntax.
 	insertFmt = "INSERT INTO %s (%s) VALUES (%s)"
 	updateFmt = "ALTER TABLE %s UPDATE %s WHERE %s"
 	deleteFmt = "ALTER TABLE %s DELETE WHERE %s"
