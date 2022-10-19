@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ClickHouse/clickhouse-go/v2"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
 )
@@ -28,6 +29,7 @@ const (
 	// ClickHouse data types.
 	chTypeDate     = "Date"
 	chTypeDateTime = "DateTime"
+	chTypeArray    = "Array"
 
 	// column names.
 	colName = "name"
@@ -80,6 +82,8 @@ func ConvertStructureData(
 		}
 
 		switch t := columnTypes[key]; {
+		case strings.Contains(t, chTypeArray):
+			result[key] = clickhouse.ArraySet{value}
 		case strings.Contains(t, chTypeDate), strings.Contains(t, chTypeDateTime):
 			timeStr, err := formatDatetime(value)
 			if err != nil {
@@ -96,22 +100,23 @@ func ConvertStructureData(
 }
 
 func formatDatetime(value any) (string, error) {
-	timeValue, ok := value.(time.Time)
-	if ok {
+	switch t := value.(type) {
+	case time.Time:
+		return value.(time.Time).UTC().Format(layoutDateTime), nil
+	case int:
+		return time.Unix(int64(value.(int)), 0).UTC().Format(layoutDateTime), nil
+	case float64:
+		return time.Unix(int64(value.(float64)), 0).UTC().Format(layoutDateTime), nil
+	case string:
+		timeValue, err := parseTime(value.(string))
+		if err != nil {
+			return "", fmt.Errorf("convert value to time.Time: %w", err)
+		}
+
 		return timeValue.Format(layoutDateTime), nil
+	default:
+		return "", fmt.Errorf("value %q with %q type is not converted to datetime format", value, t)
 	}
-
-	valueStr, ok := value.(string)
-	if !ok {
-		return "", errValueIsNotAString
-	}
-
-	timeValue, err := parseTime(valueStr)
-	if err != nil {
-		return "", fmt.Errorf("convert value to time.Time: %w", err)
-	}
-
-	return timeValue.Format(layoutDateTime), nil
 }
 
 func parseTime(val string) (time.Time, error) {
@@ -124,5 +129,5 @@ func parseTime(val string) (time.Time, error) {
 		return timeValue, nil
 	}
 
-	return time.Time{}, fmt.Errorf("%s - %w", val, errInvalidTimeLayout)
+	return time.Time{}, fmt.Errorf("cannot parse time: %s", val)
 }

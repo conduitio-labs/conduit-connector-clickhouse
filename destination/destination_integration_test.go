@@ -25,6 +25,7 @@ import (
 	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/matryer/is"
 
@@ -33,6 +34,20 @@ import (
 
 func TestDestination_Write(t *testing.T) {
 	t.Parallel()
+
+	type dataRow struct {
+		intType         int
+		stringType      string
+		floatType       float32
+		doubleType      float64
+		booleanType     bool
+		uuidType        uuid.UUID
+		dateType        time.Time
+		datetimeType    time.Time
+		arrayIntType    []int32
+		arrayStringType []string
+		mapType         map[string]int32
+	}
 
 	var (
 		ctx = context.Background()
@@ -66,31 +81,71 @@ func TestDestination_Write(t *testing.T) {
 	err = dest.Open(ctx)
 	is.NoErr(err)
 
-	records := []sdk.Record{
-		{
-			Operation: sdk.OperationSnapshot,
-			Payload: sdk.Change{After: sdk.StructuredData{
-				"int_type":    42,
-				"string_type": "John",
-			}},
-		},
-		{
-			Operation: sdk.OperationSnapshot,
-			Payload: sdk.Change{After: sdk.StructuredData{
-				"int_type":    43,
-				"string_type": "Nick",
-			}},
+	want := dataRow{
+		intType:         42,
+		stringType:      "John",
+		floatType:       float32(123.45),
+		doubleType:      123.45,
+		booleanType:     true,
+		uuidType:        uuid.New(),
+		dateType:        time.Date(2009, 11, 10, 0, 0, 0, 0, time.UTC),
+		datetimeType:    time.Date(2009, 11, 10, 23, 0, 0, 0, time.UTC),
+		arrayIntType:    []int32{10, 20, 30},
+		arrayStringType: []string{"test_a", "test_b", "test_c"},
+		mapType: map[string]int32{
+			"test1": 1,
+			"test2": 2,
 		},
 	}
 
-	n, err := dest.Write(ctx, records)
+	record := sdk.Record{
+		Operation: sdk.OperationSnapshot,
+		Payload: sdk.Change{After: sdk.StructuredData{
+			"int_type":          want.intType,
+			"string_type":       want.stringType,
+			"float_type":        want.floatType,
+			"double_type":       want.doubleType,
+			"boolean_type":      want.booleanType,
+			"uuid_type":         want.uuidType,
+			"date_type":         want.dateType,
+			"datetime_type":     want.datetimeType,
+			"array_int_type":    want.arrayIntType,
+			"array_string_type": want.arrayStringType,
+			"map_type":          want.mapType,
+		}},
+	}
+
+	n, err := dest.Write(ctx, []sdk.Record{record})
 	is.NoErr(err)
-	is.Equal(n, len(records))
+	is.Equal(n, 1)
 
 	cancel()
 
 	err = dest.Teardown(context.Background())
 	is.NoErr(err)
+
+	// wait a bit to be sure that the data have been recorded
+	time.Sleep(time.Second)
+
+	res := dataRow{}
+	err = db.QueryRow(fmt.Sprintf("SELECT * FROM %s WHERE int_type = %d;", cfg[config.Table], 42)).
+		Scan(&res.intType,
+			&res.stringType,
+			&res.floatType,
+			&res.doubleType,
+			&res.booleanType,
+			&res.uuidType,
+			&res.dateType,
+			&res.datetimeType,
+			&res.arrayIntType,
+			&res.arrayStringType,
+			&res.mapType)
+	is.NoErr(err)
+
+	// time with the location set to UTC
+	res.dateType = res.dateType.UTC()
+	res.datetimeType = res.datetimeType.UTC()
+	is.Equal(res, want)
 }
 
 func TestDestination_Write_Update(t *testing.T) {
@@ -286,8 +341,17 @@ func createTable(db *sqlx.DB, table string) error {
 	_, err := db.Exec(fmt.Sprintf(`
 	CREATE TABLE %s
 (
-    int_type    Int32,
-    string_type String,
+    int_type          Int32,
+    string_type       String,
+    float_type        Float32,
+	double_type       Float64,
+	boolean_type      Bool,
+	uuid_type         UUID,
+	date_type         Date,
+	datetime_type     DateTime,
+	array_int_type    Array(Int32),
+	array_string_type Array(String),
+    map_type          Map(String, Int32)
 ) ENGINE ReplacingMergeTree() PRIMARY KEY int_type;`, table))
 	if err != nil {
 		return fmt.Errorf("execute create table query: %w", err)
