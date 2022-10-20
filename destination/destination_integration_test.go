@@ -178,6 +178,9 @@ func TestDestination_Write_Update(t *testing.T) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// set a KeyColumns field to the config
+	cfg[config.KeyColumns] = "int_type"
+
 	dest := NewDestination()
 
 	err = dest.Configure(ctx, cfg)
@@ -204,6 +207,23 @@ func TestDestination_Write_Update(t *testing.T) {
 	name, err := getStringFieldByIntField(db, cfg[config.Table], 42)
 	is.NoErr(err)
 	is.Equal(name, "Jane")
+
+	// update the record with no Key
+	n, err = dest.Write(ctx, []sdk.Record{
+		{
+			Operation: sdk.OperationUpdate,
+			Payload: sdk.Change{After: sdk.StructuredData{
+				"int_type":    42,
+				"string_type": "Sam",
+			}},
+		},
+	})
+	is.NoErr(err)
+	is.Equal(n, 1)
+
+	name, err = getStringFieldByIntField(db, cfg[config.Table], 42)
+	is.NoErr(err)
+	is.Equal(name, "Sam")
 
 	cancel()
 

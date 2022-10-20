@@ -34,7 +34,7 @@ func TestDestination_ConfigureSuccess(t *testing.T) {
 	d := NewDestination()
 
 	err := d.Configure(context.Background(), map[string]string{
-		config.URL:   "localhost:8123?username=user&password=password&database=default",
+		config.URL:   "http://username:password@host1:8123/database",
 		config.Table: "test_table",
 	})
 	is.NoErr(err)
@@ -48,7 +48,7 @@ func TestDestination_ConfigureFail(t *testing.T) {
 	d := NewDestination()
 
 	err := d.Configure(context.Background(), map[string]string{
-		config.URL: "localhost:8123?username=user&password=password&database=default",
+		config.URL: "http://username:password@host1:8123/database",
 	})
 	is.True(err != nil)
 }

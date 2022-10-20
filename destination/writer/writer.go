@@ -45,20 +45,23 @@ const (
 type Writer struct {
 	db          *sqlx.DB
 	table       string
+	keyColumns  []string
 	columnTypes map[string]string
 }
 
 // Params is an incoming params for the New function.
 type Params struct {
-	DB    *sqlx.DB
-	Table string
+	DB         *sqlx.DB
+	Table      string
+	KeyColumns []string
 }
 
 // NewWriter creates new instance of the Writer.
 func NewWriter(ctx context.Context, params Params) (*Writer, error) {
 	writer := &Writer{
-		db:    params.DB,
-		table: params.Table,
+		db:         params.DB,
+		table:      params.Table,
+		keyColumns: params.KeyColumns,
 	}
 
 	columnTypes, err := columntypes.GetColumnTypes(ctx, writer.db, writer.table)
@@ -129,6 +132,16 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 	key, err := w.structurizeData(record.Key)
 	if err != nil {
 		return fmt.Errorf("structurize key: %w", err)
+	}
+
+	if key == nil {
+		key = make(sdk.StructuredData)
+
+		for i := range w.keyColumns {
+			if val, ok := payload[w.keyColumns[i]]; ok {
+				key[w.keyColumns[i]] = val
+			}
+		}
 	}
 
 	keyColumns, err := w.getKeyColumns(key)
