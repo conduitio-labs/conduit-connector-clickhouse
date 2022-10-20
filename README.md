@@ -23,9 +23,15 @@ the environment variables as an `CLICKHOUSE_URL`.
 
 ## Destination
 
-The destination connector allows you to move data from any Conduit Source to a ClickHouse table.
+The ClickHouse Destination allows you to move data from any Conduit Source to a ClickHouse table. It takes
+a `sdk.Record` and parses it into a valid SQL query.
 
-### Table name
+### Key Handling
+
+If the `sdk.Record.Key` is empty, it is formed from `sdk.Record.Payload` data by the keys of this list (for update
+operations only).
+
+### Table Name
 
 If a record contains a `clickhouse.table` property in its metadata, it will work with this table, otherwise, it will
 fall back to use the table configured in the connector. Thus, a Destination can support multiple tables in a single
@@ -33,7 +39,8 @@ connector, as long as the user has proper access to those tables.
 
 ### Configuration Options
 
-| name        | description                                                                           | required | example                                        |
-|-------------|---------------------------------------------------------------------------------------|----------|------------------------------------------------|
-| `url`       | the [DSN](https://github.com/ClickHouse/clickhouse-go#dsn) to connect to the database | **true** | `http://username:password@host1:8123/database` |
-| `table`     | the name of a table in the database that the connector should write to, by default    | **true** | `table_name`                                   |
+| name         | description                                                                            | required | example                                        |
+|--------------|----------------------------------------------------------------------------------------|----------|------------------------------------------------|
+| `url`        | The [DSN](https://github.com/ClickHouse/clickhouse-go#dsn) to connect to the database. | **true** | `http://username:password@host1:8123/database` |
+| `table`      | The name of a table in the database that the connector should write to, by default.    | **true** | `table_name`                                   |
+| `keyColumns` | The list of key column names, separated by commas.                                     | false    | `id,name`                                      |

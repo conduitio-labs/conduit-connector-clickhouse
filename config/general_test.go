@@ -33,12 +33,39 @@ func TestParseGeneral(t *testing.T) {
 		{
 			name: "valid config",
 			in: map[string]string{
-				URL:   "http://127.0.0.1:8123?username=test_user&password=test_pass_123&database=db_name",
+				URL:   "http://username:password@host1:8123/database",
 				Table: "test_table",
 			},
 			want: General{
-				URL:   "http://127.0.0.1:8123?username=test_user&password=test_pass_123&database=db_name",
-				Table: "test_table",
+				URL:        "http://username:password@host1:8123/database",
+				Table:      "test_table",
+				KeyColumns: []string{},
+			},
+		},
+		{
+			name: "valid config with keyColumns field",
+			in: map[string]string{
+				URL:        "http://username:password@host1:8123/database",
+				Table:      "test_table",
+				KeyColumns: "id",
+			},
+			want: General{
+				URL:        "http://username:password@host1:8123/database",
+				Table:      "test_table",
+				KeyColumns: []string{"id"},
+			},
+		},
+		{
+			name: "valid config with keyColumns fields",
+			in: map[string]string{
+				URL:        "http://username:password@host1:8123/database",
+				Table:      "test_table",
+				KeyColumns: "id ,name , ,  ,,",
+			},
+			want: General{
+				URL:        "http://username:password@host1:8123/database",
+				Table:      "test_table",
+				KeyColumns: []string{"id", "name"},
 			},
 		},
 		{
