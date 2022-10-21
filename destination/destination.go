@@ -72,7 +72,9 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 }
 
 // Configure parses and stores configurations, returns an error in case of invalid configuration.
-func (d *Destination) Configure(_ context.Context, cfg map[string]string) (err error) {
+func (d *Destination) Configure(ctx context.Context, cfg map[string]string) (err error) {
+	sdk.Logger(ctx).Info().Msg("Configuring ClickHouse Destination...")
+
 	d.cfg, err = config.ParseDestination(cfg)
 	if err != nil {
 		return fmt.Errorf("parse destination config: %w", err)
@@ -83,6 +85,8 @@ func (d *Destination) Configure(_ context.Context, cfg map[string]string) (err e
 
 // Open initializes a publisher client.
 func (d *Destination) Open(ctx context.Context) (err error) {
+	sdk.Logger(ctx).Info().Msg("Opening a ClickHouse Destination...")
+
 	db, err := sqlx.Open("clickhouse", d.cfg.URL)
 	if err != nil {
 		return fmt.Errorf("open connection: %w", err)
@@ -107,15 +111,22 @@ func (d *Destination) Open(ctx context.Context) (err error) {
 
 // Write writes records into a Destination.
 func (d *Destination) Write(ctx context.Context, records []sdk.Record) (int, error) {
-	for i, record := range records {
-		err := sdk.Util.Destination.Route(ctx, record,
+	for i := range records {
+		sdk.Logger(ctx).Debug().Bytes("record", records[i].Bytes()).
+			Msg("Writing a record into ClickHouse Destination...")
+
+		err := sdk.Util.Destination.Route(ctx, records[i],
 			d.writer.Insert,
 			d.writer.Update,
 			d.writer.Delete,
 			d.writer.Insert,
 		)
 		if err != nil {
-			return i, fmt.Errorf("route %s: %w", record.Operation.String(), err)
+			if records[i].Key != nil {
+				return i, fmt.Errorf("key %s: %w", string(records[i].Key.Bytes()), err)
+			}
+
+			return i, fmt.Errorf("record with no key: %w", err)
 		}
 	}
 
@@ -124,6 +135,8 @@ func (d *Destination) Write(ctx context.Context, records []sdk.Record) (int, err
 
 // Teardown gracefully closes connections.
 func (d *Destination) Teardown(ctx context.Context) error {
+	sdk.Logger(ctx).Info().Msg("Tearing down the ClickHouse Destination")
+
 	if d.db != nil {
 		return d.db.Close()
 	}
