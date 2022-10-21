@@ -81,7 +81,7 @@ func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 
 	// if payload is empty return empty payload error
 	if payload == nil {
-		return errNoPayload
+		return ErrNoPayload
 	}
 
 	payload, err = columntypes.ConvertStructureData(w.columnTypes, payload)
@@ -117,7 +117,7 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 
 	// if payload is empty return empty payload error
 	if payload == nil {
-		return errNoPayload
+		return ErrNoPayload
 	}
 
 	payload, err = columntypes.ConvertStructureData(w.columnTypes, payload)
@@ -218,7 +218,7 @@ func (w *Writer) getTableName(metadata map[string]string) string {
 // returns either all the keys of the sdk.Record's Key field.
 func (w *Writer) getKeyColumns(key sdk.StructuredData) ([]string, error) {
 	if len(key) == 0 {
-		return nil, errEmptyKey
+		return nil, ErrNoKey
 	}
 
 	keyColumns := make([]string, 0, len(key))

@@ -21,12 +21,13 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/mock"
+	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/writer"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/golang/mock/gomock"
 	"github.com/matryer/is"
 )
 
-func TestDestination_ConfigureSuccess(t *testing.T) {
+func TestDestination_Configure_Success(t *testing.T) {
 	t.Parallel()
 
 	is := is.New(t)
@@ -40,7 +41,7 @@ func TestDestination_ConfigureSuccess(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestDestination_ConfigureFail(t *testing.T) {
+func TestDestination_Configure_Fail(t *testing.T) {
 	t.Parallel()
 
 	is := is.New(t)
@@ -53,7 +54,7 @@ func TestDestination_ConfigureFail(t *testing.T) {
 	is.True(err != nil)
 }
 
-func TestDestination_WriteSuccess(t *testing.T) {
+func TestDestination_Write_Success(t *testing.T) {
 	t.Parallel()
 
 	is := is.New(t)
@@ -107,7 +108,66 @@ func TestDestination_WriteSuccess(t *testing.T) {
 	is.Equal(n, len(records))
 }
 
-func TestDestination_TeardownSuccess(t *testing.T) {
+func TestDestination_Write_Fail_NoPayload(t *testing.T) {
+	t.Parallel()
+
+	is := is.New(t)
+
+	ctrl := gomock.NewController(t)
+	ctx := context.Background()
+
+	record := sdk.Record{
+		Position:  sdk.Position("1.0"),
+		Operation: sdk.OperationCreate,
+		Key: sdk.StructuredData{
+			"id": 1,
+		},
+	}
+
+	w := mock.NewMockWriter(ctrl)
+	w.EXPECT().Insert(ctx, record).Return(writer.ErrNoPayload)
+
+	d := Destination{
+		writer: w,
+	}
+
+	written, err := d.Write(ctx, []sdk.Record{record})
+	is.Equal(err.Error(), "key {\"id\":1}: no payload")
+	is.Equal(written, 0)
+}
+
+func TestDestination_Write_Fail_NoKey(t *testing.T) {
+	t.Parallel()
+
+	is := is.New(t)
+
+	ctrl := gomock.NewController(t)
+	ctx := context.Background()
+
+	record := sdk.Record{
+		Position:  sdk.Position("1.0"),
+		Operation: sdk.OperationUpdate,
+		Payload: sdk.Change{
+			After: sdk.StructuredData{
+				"id":   1,
+				"name": "John",
+			},
+		},
+	}
+
+	w := mock.NewMockWriter(ctrl)
+	w.EXPECT().Update(ctx, record).Return(writer.ErrNoKey)
+
+	d := Destination{
+		writer: w,
+	}
+
+	written, err := d.Write(ctx, []sdk.Record{record})
+	is.Equal(err.Error(), "record with no key: key value must be provided")
+	is.Equal(written, 0)
+}
+
+func TestDestination_Teardown_Success(t *testing.T) {
 	t.Parallel()
 
 	is := is.New(t)
@@ -123,7 +183,7 @@ func TestDestination_TeardownSuccess(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestDestination_TeardownSuccessNilWriter(t *testing.T) {
+func TestDestination_Teardown_Success_NilWriter(t *testing.T) {
 	t.Parallel()
 
 	is := is.New(t)
