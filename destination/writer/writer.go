@@ -35,10 +35,6 @@ const (
 	insertFmt = "INSERT INTO %s (%s) VALUES (%s)"
 	updateFmt = "ALTER TABLE %s UPDATE %s WHERE %s"
 	deleteFmt = "ALTER TABLE %s DELETE WHERE %s"
-
-	coma        = ","
-	placeholder = "?"
-	operatorAnd = " AND "
 )
 
 // Writer implements a writer logic for ClickHouse destination.
@@ -97,10 +93,10 @@ func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 
 	placeholders := make([]string, len(columns))
 	for i := range columns {
-		placeholders[i] = placeholder
+		placeholders[i] = "?"
 	}
 
-	query := fmt.Sprintf(insertFmt, tableName, strings.Join(columns, coma), strings.Join(placeholders, coma))
+	query := fmt.Sprintf(insertFmt, tableName, strings.Join(columns, ","), strings.Join(placeholders, ","))
 
 	_, err = w.db.ExecContext(ctx, query, values...)
 	if err != nil {
@@ -158,16 +154,16 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 
 	updateColumns := make([]string, len(columns))
 	for i := range columns {
-		updateColumns[i] = fmt.Sprintf("%s = %s", columns[i], placeholder)
+		updateColumns[i] = fmt.Sprintf("%s = ?", columns[i])
 	}
 
 	whereClauses := make([]string, len(keyColumns))
 	for i := range keyColumns {
-		whereClauses[i] = fmt.Sprintf("%s = %s", keyColumns[i], placeholder)
+		whereClauses[i] = fmt.Sprintf("%s = ?", keyColumns[i])
 		values = append(values, key[keyColumns[i]])
 	}
 
-	query := fmt.Sprintf(updateFmt, tableName, strings.Join(updateColumns, coma), strings.Join(whereClauses, operatorAnd))
+	query := fmt.Sprintf(updateFmt, tableName, strings.Join(updateColumns, ","), strings.Join(whereClauses, " AND "))
 
 	_, err = w.db.ExecContext(ctx, query, values...)
 	if err != nil {
@@ -194,11 +190,11 @@ func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
 	whereClauses := make([]string, len(keyColumns))
 	values := make([]any, 0, len(keyColumns))
 	for i := range keyColumns {
-		whereClauses[i] = fmt.Sprintf("%s = %s", keyColumns[i], placeholder)
+		whereClauses[i] = fmt.Sprintf("%s = ?", keyColumns[i])
 		values = append(values, key[keyColumns[i]])
 	}
 
-	query := fmt.Sprintf(deleteFmt, tableName, strings.Join(whereClauses, operatorAnd))
+	query := fmt.Sprintf(deleteFmt, tableName, strings.Join(whereClauses, " AND "))
 
 	_, err = w.db.ExecContext(ctx, query, values...)
 	if err != nil {
