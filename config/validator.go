@@ -15,6 +15,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -30,6 +31,9 @@ const (
 var (
 	validatorInstance *v.Validate
 	once              sync.Once
+
+	errKeyColumnsInclude     = errors.New("columns must include all keyColumns")
+	errOrderingColumnInclude = errors.New("columns must include orderingColumn")
 )
 
 // Get initializes and registers validation tags once, and returns validator instance.
@@ -62,6 +66,31 @@ func validate(s interface{}) error {
 	}
 
 	return err
+}
+
+// checks that the Columns configuration field with a list of columns,
+// contains an orderingColumn and all keyColumns.
+func validateColumns(orderingColumn string, keyColumns, columns []string) error {
+	if orderingColumn == "" && len(keyColumns) == 0 {
+		return nil
+	}
+
+	columnsMap := make(map[string]struct{}, len(columns))
+	for i := 0; i < len(columns); i++ {
+		columnsMap[columns[i]] = struct{}{}
+	}
+
+	if _, ok := columnsMap[orderingColumn]; !ok {
+		return errOrderingColumnInclude
+	}
+
+	for i := range keyColumns {
+		if _, ok := columnsMap[keyColumns[i]]; !ok {
+			return errKeyColumnsInclude
+		}
+	}
+
+	return nil
 }
 
 // returns the formatted required field error.

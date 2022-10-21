@@ -51,8 +51,11 @@ func parseGeneral(cfg map[string]string) (general, error) {
 // returns a configuration key name by struct field.
 func getKeyName(fieldName string) string {
 	return map[string]string{
-		"URL":        URL,
-		"Table":      Table,
-		"KeyColumns": KeyColumns,
+		"URL":            URL,
+		"Table":          Table,
+		"KeyColumns":     KeyColumns,
+		"OrderingColumn": OrderingColumn,
+		"Columns":        Columns,
+		"BatchSize":      BatchSize,
 	}[fieldName]
 }
