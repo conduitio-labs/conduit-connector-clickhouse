@@ -51,7 +51,7 @@ func TestDestination_Configure_Fail(t *testing.T) {
 	err := d.Configure(context.Background(), map[string]string{
 		config.URL: "http://username:password@host1:8123/database",
 	})
-	is.True(err != nil)
+	is.Equal(err.Error(), "parse destination config: \"table\" value must be set")
 }
 
 func TestDestination_Write_Success(t *testing.T) {
