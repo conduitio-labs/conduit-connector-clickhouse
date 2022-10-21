@@ -25,43 +25,31 @@ const (
 	KeyColumns = "keyColumns"
 )
 
-// A General represents a general configuration needed to connect to ClickHouse database.
-type General struct {
+// represents a general configuration needed to connect to ClickHouse database.
+type general struct {
 	// URL is the configuration of the connection string to connect to ClickHouse database.
 	URL string `json:"url" validate:"required"`
 	// Table is the configuration of the table name.
 	Table string `json:"table" validate:"required"`
-	// KeyColumns is the configuration of key column names, separated by commas.
-	KeyColumns []string `json:"keyColumns"`
 }
 
-// Parse parses general configuration.
-func Parse(cfg map[string]string) (General, error) {
-	config := General{
+// parses a general configuration.
+func parseGeneral(cfg map[string]string) (general, error) {
+	config := general{
 		URL:   strings.TrimSpace(cfg[URL]),
 		Table: strings.TrimSpace(cfg[Table]),
 	}
 
-	keyColumns := strings.Split(cfg[KeyColumns], ",")
-	config.KeyColumns = make([]string, 0, len(keyColumns))
-
-	for i := range keyColumns {
-		keyColumn := strings.TrimSpace(keyColumns[i])
-		if keyColumn != "" {
-			config.KeyColumns = append(config.KeyColumns, keyColumn)
-		}
-	}
-
 	err := validate(config)
 	if err != nil {
-		return General{}, err
+		return general{}, err
 	}
 
 	return config, nil
 }
 
-// GetKeyName returns a configuration key name by struct field.
-func GetKeyName(fieldName string) string {
+// returns a configuration key name by struct field.
+func getKeyName(fieldName string) string {
 	return map[string]string{
 		"URL":        URL,
 		"Table":      Table,

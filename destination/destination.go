@@ -40,7 +40,7 @@ type Destination struct {
 
 	db     *sqlx.DB
 	writer Writer
-	cfg    config.General
+	cfg    config.Destination
 }
 
 // NewDestination initialises a new Destination.
@@ -73,9 +73,9 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 
 // Configure parses and stores configurations, returns an error in case of invalid configuration.
 func (d *Destination) Configure(_ context.Context, cfg map[string]string) (err error) {
-	d.cfg, err = config.Parse(cfg)
+	d.cfg, err = config.ParseDestination(cfg)
 	if err != nil {
-		return fmt.Errorf("parse config: %w", err)
+		return fmt.Errorf("parse destination config: %w", err)
 	}
 
 	return nil

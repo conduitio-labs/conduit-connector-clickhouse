@@ -54,9 +54,9 @@ func validate(s interface{}) error {
 		for _, e := range validationErr.(v.ValidationErrors) {
 			switch e.ActualTag() {
 			case "required":
-				err = multierr.Append(err, requiredErr(GetKeyName(e.Field())))
+				err = multierr.Append(err, errRequired(getKeyName(e.Field())))
 			case "gte", "lte":
-				err = multierr.Append(err, outOfRangeErr(GetKeyName(e.Field())))
+				err = multierr.Append(err, errOutOfRange(getKeyName(e.Field())))
 			}
 		}
 	}
@@ -64,12 +64,12 @@ func validate(s interface{}) error {
 	return err
 }
 
-// requiredErr returns the formatted required field error.
-func requiredErr(name string) error {
+// returns the formatted required field error.
+func errRequired(name string) error {
 	return fmt.Errorf(requiredErrMsg, name)
 }
 
-// outOfRangeErr returns the formatted out of range error.
-func outOfRangeErr(name string) error {
+// returns the formatted out of range error.
+func errOutOfRange(name string) error {
 	return fmt.Errorf(outOfRangeErrMsg, name)
 }

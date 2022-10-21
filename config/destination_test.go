@@ -17,48 +17,46 @@ package config
 import (
 	"reflect"
 	"testing"
-
-	"go.uber.org/multierr"
 )
 
-func TestParseGeneral(t *testing.T) {
+func TestParseDestination(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name string
 		in   map[string]string
-		want general
+		want Destination
 		err  error
 	}{
 		{
-			name: "valid config",
+			name: "valid config with keyColumns field",
 			in: map[string]string{
-				URL:   "http://username:password@host1:8123/database",
-				Table: "test_table",
+				URL:        "http://username:password@host1:8123/database",
+				Table:      "test_table",
+				KeyColumns: "id",
 			},
-			want: general{
-				URL:   "http://username:password@host1:8123/database",
-				Table: "test_table",
+			want: Destination{
+				general: general{
+					URL:   "http://username:password@host1:8123/database",
+					Table: "test_table",
+				},
+				KeyColumns: []string{"id"},
 			},
 		},
 		{
-			name: "url is required",
+			name: "valid config with keyColumns fields",
 			in: map[string]string{
-				Table: "test_table",
+				URL:        "http://username:password@host1:8123/database",
+				Table:      "test_table",
+				KeyColumns: "id ,name , ,  ,,",
 			},
-			err: errRequired(URL),
-		},
-		{
-			name: "table is required",
-			in: map[string]string{
-				URL: "test_user/test_pass_123@localhost:1521/db_name",
+			want: Destination{
+				general: general{
+					URL:   "http://username:password@host1:8123/database",
+					Table: "test_table",
+				},
+				KeyColumns: []string{"id", "name"},
 			},
-			err: errRequired(Table),
-		},
-		{
-			name: "a couple required fields are empty (a password and an url)",
-			in:   map[string]string{},
-			err:  multierr.Combine(errRequired(URL), errRequired(Table)),
 		},
 	}
 
@@ -68,7 +66,7 @@ func TestParseGeneral(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := parseGeneral(tt.in)
+			got, err := ParseDestination(tt.in)
 			if err != nil {
 				if tt.err == nil {
 					t.Errorf("unexpected error: %s", err.Error())
