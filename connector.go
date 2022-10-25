@@ -16,12 +16,13 @@ package clickhouse
 
 import (
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination"
+	"github.com/conduitio-labs/conduit-connector-clickhouse/source"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
 // Connector represents a sdk.Connector of ClickHouse.
 var Connector = sdk.Connector{
 	NewSpecification: Specification,
-	NewSource:        nil,
+	NewSource:        source.NewSource,
 	NewDestination:   destination.NewDestination,
 }
