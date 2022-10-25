@@ -46,3 +46,6 @@ connector, as long as the user has proper access to those tables.
 | `keyColumns`         | The list of key column names, separated by commas.                                      | false    | `id,name`                                      |
 | `sdk.rate.perSecond` | Maximum times the Write function can be called per second (0 means no rate limit).      | false    | `200`                                          |
 | `sdk.rate.burst`     | Allow bursts of at most X writes (0 means that bursts are not allowed).                 | false    | `10`                                           |
+
+Creating a Destination connector will fail if the table does not exist or if the user does not have permission to work
+with the specified table.
