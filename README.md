@@ -39,8 +39,10 @@ connector, as long as the user has proper access to those tables.
 
 ### Configuration Options
 
-| name         | description                                                                            | required | example                                        |
-|--------------|----------------------------------------------------------------------------------------|----------|------------------------------------------------|
-| `url`        | The [DSN](https://github.com/ClickHouse/clickhouse-go#dsn) to connect to the database. | **true** | `http://username:password@host1:8123/database` |
-| `table`      | The name of a table in the database that the connector should write to, by default.    | **true** | `table_name`                                   |
-| `keyColumns` | The list of key column names, separated by commas.                                     | false    | `id,name`                                      |
+| name                 | description                                                                             | required | example                                        |
+|----------------------|-----------------------------------------------------------------------------------------|----------|------------------------------------------------|
+| `url`                | The [DSN](https://github.com/ClickHouse/clickhouse-go#dsn) to connect to the database.  | **true** | `http://username:password@host1:8123/database` |
+| `table`              | The name of a table in the database that the connector should write to, by default.     | **true** | `table_name`                                   |
+| `keyColumns`         | The list of key column names, separated by commas.                                      | false    | `id,name`                                      |
+| `sdk.rate.perSecond` | Maximum times the Write function can be called per second (0 means no rate limit).      | false    | `200`                                          |
+| `sdk.rate.burst`     | Allow bursts of at most X writes (0 means that bursts are not allowed).                 | false    | `10`                                           |
