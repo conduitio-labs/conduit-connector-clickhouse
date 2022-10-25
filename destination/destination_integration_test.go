@@ -32,8 +32,6 @@ import (
 )
 
 func TestDestination_Write(t *testing.T) {
-	t.Parallel()
-
 	type dataRow struct {
 		intType         int
 		stringType      string
@@ -148,8 +146,6 @@ func TestDestination_Write(t *testing.T) {
 }
 
 func TestDestination_Write_Update(t *testing.T) {
-	t.Parallel()
-
 	var (
 		ctx = context.Background()
 		cfg = prepareConfig(t)
@@ -231,8 +227,6 @@ func TestDestination_Write_Update(t *testing.T) {
 }
 
 func TestDestination_Write_Delete(t *testing.T) {
-	t.Parallel()
-
 	var (
 		ctx = context.Background()
 		cfg = prepareConfig(t)
@@ -291,8 +285,6 @@ func TestDestination_Write_Delete(t *testing.T) {
 }
 
 func TestDestination_Write_WrongColumn(t *testing.T) {
-	t.Parallel()
-
 	var (
 		ctx = context.Background()
 		cfg = prepareConfig(t)
