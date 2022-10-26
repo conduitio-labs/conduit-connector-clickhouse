@@ -23,6 +23,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-clickhouse/source/iterator"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/multierr"
 
 	// Go driver for ClickHouse.
 	_ "github.com/ClickHouse/clickhouse-go/v2"
@@ -40,6 +41,7 @@ type Source struct {
 	sdk.UnimplementedSource
 
 	config   config.Source
+	db       *sqlx.DB
 	iterator Iterator
 }
 
@@ -122,6 +124,8 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 		return fmt.Errorf("ping: %w", err)
 	}
 
+	s.db = db
+
 	s.iterator, err = iterator.New(ctx, iterator.Params{
 		DB:               db,
 		LastProcessedVal: lastProcessedVal,
@@ -168,8 +172,16 @@ func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
 }
 
 // Teardown gracefully shutdown connector.
-func (s *Source) Teardown(ctx context.Context) error {
+func (s *Source) Teardown(ctx context.Context) (err error) {
 	sdk.Logger(ctx).Info().Msg("Tearing down the ClickHouse Source")
 
-	return s.iterator.Stop()
+	if s.iterator != nil {
+		err = s.iterator.Stop()
+	}
+
+	if s.db != nil {
+		err = multierr.Append(err, s.db.Close())
+	}
+
+	return
 }

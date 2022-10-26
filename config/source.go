@@ -33,7 +33,7 @@ const (
 
 // A Source represents a source configuration.
 type Source struct {
-	general
+	General
 
 	// KeyColumns is the configuration of key column names, separated by commas.
 	KeyColumns []string `validate:"required"`
@@ -53,7 +53,7 @@ func ParseSource(cfg map[string]string) (Source, error) {
 	}
 
 	sourceConfig := Source{
-		general:        config,
+		General:        config,
 		OrderingColumn: cfg[OrderingColumn],
 		BatchSize:      defaultBatchSize,
 	}

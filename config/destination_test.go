@@ -36,7 +36,7 @@ func TestParseDestination(t *testing.T) {
 				KeyColumns: "id",
 			},
 			want: Destination{
-				general: general{
+				General: General{
 					URL:   "http://username:password@host1:8123/database",
 					Table: "test_table",
 				},
@@ -51,7 +51,7 @@ func TestParseDestination(t *testing.T) {
 				KeyColumns: "id ,name , ,  ,,",
 			},
 			want: Destination{
-				general: general{
+				General: General{
 					URL:   "http://username:password@host1:8123/database",
 					Table: "test_table",
 				},

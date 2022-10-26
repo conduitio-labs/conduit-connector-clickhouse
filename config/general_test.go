@@ -27,7 +27,7 @@ func TestParseGeneral(t *testing.T) {
 	tests := []struct {
 		name string
 		in   map[string]string
-		want general
+		want General
 		err  error
 	}{
 		{
@@ -36,7 +36,7 @@ func TestParseGeneral(t *testing.T) {
 				URL:   "http://username:password@host1:8123/database",
 				Table: "test_table",
 			},
-			want: general{
+			want: General{
 				URL:   "http://username:password@host1:8123/database",
 				Table: "test_table",
 			},

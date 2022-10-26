@@ -36,7 +36,7 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "id ,name , ,  ,,",
 			},
 			want: Source{
-				general: general{
+				General: General{
 					URL:   "http://username:password@host1:8123/database",
 					Table: "test_table",
 				},
@@ -55,7 +55,7 @@ func TestParseSource(t *testing.T) {
 				BatchSize:      "100",
 			},
 			want: Source{
-				general: general{
+				General: General{
 					URL:   "http://username:password@host1:8123/database",
 					Table: "test_table",
 				},
@@ -74,7 +74,7 @@ func TestParseSource(t *testing.T) {
 				BatchSize:      "100000",
 			},
 			want: Source{
-				general: general{
+				General: General{
 					URL:   "http://username:password@host1:8123/database",
 					Table: "test_table",
 				},
@@ -93,7 +93,7 @@ func TestParseSource(t *testing.T) {
 				BatchSize:      "1",
 			},
 			want: Source{
-				general: general{
+				General: General{
 					URL:   "http://username:password@host1:8123/database",
 					Table: "test_table",
 				},
@@ -112,7 +112,7 @@ func TestParseSource(t *testing.T) {
 				Columns:        "id, name,age",
 			},
 			want: Source{
-				general: general{
+				General: General{
 					URL:   "http://username:password@host1:8123/database",
 					Table: "test_table",
 				},

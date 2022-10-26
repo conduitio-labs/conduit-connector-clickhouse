@@ -87,12 +87,7 @@ func New(ctx context.Context, params Params) (*Iterator, error) {
 
 // HasNext returns a bool indicating whether the iterator has the next record to return or not.
 func (iter *Iterator) HasNext(ctx context.Context) (bool, error) {
-	hasNext, err := iter.hasNext(ctx)
-	if err != nil {
-		return false, fmt.Errorf("has next: %w", err)
-	}
-
-	return hasNext, nil
+	return iter.hasNext(ctx)
 }
 
 // Next returns the next record.
@@ -106,7 +101,7 @@ func (iter *Iterator) Next(ctx context.Context) (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("ordering column %q not found", iter.orderingColumn)
 	}
 
-	key := sdk.StructuredData{}
+	key := make(sdk.StructuredData)
 	for i := range iter.keyColumns {
 		val, ok := row[iter.keyColumns[i]]
 		if !ok {
@@ -145,8 +140,8 @@ func (iter *Iterator) Next(ctx context.Context) (sdk.Record, error) {
 
 // Stop stops iterators and closes database connection.
 func (iter *Iterator) Stop() (err error) {
-	if iter.db != nil {
-		return iter.db.Close()
+	if iter.rows != nil {
+		return iter.rows.Close()
 	}
 
 	return nil
