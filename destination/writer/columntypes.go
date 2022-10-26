@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package columntypes
+package writer
 
 import (
 	"context"
@@ -46,8 +46,8 @@ var timeLayouts = []string{time.RFC3339, time.RFC3339Nano, time.Layout, time.ANS
 	time.RFC822, time.RFC822Z, time.RFC850, time.RFC1123, time.RFC1123Z, time.RFC3339, time.RFC3339,
 	time.RFC3339Nano, time.Kitchen, time.Stamp, time.StampMilli, time.StampMicro, time.StampNano}
 
-// GetColumnTypes returns a map containing the names and types of the table columns.
-func GetColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[string]string, error) {
+// returns a map containing the names and types of the table columns.
+func getColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[string]string, error) {
 	dest := make(map[string]any)
 
 	rows, err := db.QueryxContext(ctx, fmt.Sprintf(queryDescribeTable, tableName))
@@ -67,8 +67,8 @@ func GetColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[str
 	return columnTypes, nil
 }
 
-// ConvertStructureData converts a sdk.StructureData values to a proper database types.
-func ConvertStructureData(
+// converts a [sdk.StructureData] values to a proper database types.
+func convertStructureData(
 	columnTypes map[string]string,
 	data sdk.StructuredData,
 ) (sdk.StructuredData, error) {
