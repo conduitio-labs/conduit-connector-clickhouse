@@ -23,9 +23,9 @@ import (
 const (
 	// OrderingColumn is a config name for an ordering column.
 	OrderingColumn = "orderingColumn"
-	// Columns is a config name for columns.
+	// Columns is the config name for a list of columns, separated by commas.
 	Columns = "columns"
-	// BatchSize is a config name for a batch size.
+	// BatchSize is the config name for a batch size.
 	BatchSize = "batchSize"
 
 	defaultBatchSize = 1000

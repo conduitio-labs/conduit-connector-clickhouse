@@ -21,7 +21,8 @@ const (
 	URL = "url"
 	// Table is the configuration name of the table.
 	Table = "table"
-	// KeyColumns is the configuration name of key column names, separated by commas.
+	// KeyColumns is the configuration name of key column names (for the Destination),
+	// or of the names of the columns to build the record.Key (for the Source), separated by commas.
 	KeyColumns = "keyColumns"
 )
 

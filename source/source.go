@@ -64,17 +64,18 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 		config.KeyColumns: {
 			Default:     "",
 			Required:    true,
-			Description: "A column name that used to detect if the target table already contains the record.",
+			Description: "The names of the columns to build the record.Key, separated by commas.",
 		},
 		config.OrderingColumn: {
 			Default:     "",
 			Required:    true,
-			Description: "A name of a column that the connector will use for ordering rows.",
+			Description: "The name of the column that the connector will use for ordering rows.",
 		},
 		config.Columns: {
-			Default:     "",
-			Required:    false,
-			Description: "The list of column names that should be included in each Record's payload",
+			Default:  "",
+			Required: false,
+			Description: "The list of column names that should be included in each Record's payload, " +
+				"separated by commas.",
 		},
 		config.BatchSize: {
 			Default:     "1000",
