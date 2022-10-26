@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package columntypes
+package writer
 
 import (
 	"reflect"
@@ -44,7 +44,7 @@ func TestConvertStructureData(t *testing.T) {
 		"datetime_string_field": "2000-04-30 19:44:11",
 	}
 
-	got, err := ConvertStructureData(columnTypes, data)
+	got, err := convertStructureData(columnTypes, data)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err.Error())
 

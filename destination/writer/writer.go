@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/conduitio-labs/conduit-connector-clickhouse/columntypes"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
 )
@@ -60,7 +59,7 @@ func NewWriter(ctx context.Context, params Params) (*Writer, error) {
 		keyColumns: params.KeyColumns,
 	}
 
-	columnTypes, err := columntypes.GetColumnTypes(ctx, writer.db, writer.table)
+	columnTypes, err := getColumnTypes(ctx, writer.db, writer.table)
 	if err != nil {
 		return nil, fmt.Errorf("get column types: %w", err)
 	}
@@ -84,7 +83,7 @@ func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 		return ErrNoPayload
 	}
 
-	payload, err = columntypes.ConvertStructureData(w.columnTypes, payload)
+	payload, err = convertStructureData(w.columnTypes, payload)
 	if err != nil {
 		return fmt.Errorf("convert structure data: %w", err)
 	}
@@ -120,7 +119,7 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 		return ErrNoPayload
 	}
 
-	payload, err = columntypes.ConvertStructureData(w.columnTypes, payload)
+	payload, err = convertStructureData(w.columnTypes, payload)
 	if err != nil {
 		return fmt.Errorf("convert structure data: %w", err)
 	}
