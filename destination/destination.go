@@ -38,9 +38,9 @@ type Writer interface {
 type Destination struct {
 	sdk.UnimplementedDestination
 
+	config config.Destination
 	db     *sqlx.DB
 	writer Writer
-	cfg    config.Destination
 }
 
 // NewDestination initialises a new Destination.
@@ -75,7 +75,7 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 func (d *Destination) Configure(ctx context.Context, cfg map[string]string) (err error) {
 	sdk.Logger(ctx).Info().Msg("Configuring ClickHouse Destination...")
 
-	d.cfg, err = config.ParseDestination(cfg)
+	d.config, err = config.ParseDestination(cfg)
 	if err != nil {
 		return fmt.Errorf("parse destination config: %w", err)
 	}
@@ -87,7 +87,7 @@ func (d *Destination) Configure(ctx context.Context, cfg map[string]string) (err
 func (d *Destination) Open(ctx context.Context) (err error) {
 	sdk.Logger(ctx).Info().Msg("Opening a ClickHouse Destination...")
 
-	db, err := sqlx.Open("clickhouse", d.cfg.URL)
+	db, err := sqlx.Open("clickhouse", d.config.URL)
 	if err != nil {
 		return fmt.Errorf("open connection: %w", err)
 	}
@@ -97,10 +97,12 @@ func (d *Destination) Open(ctx context.Context) (err error) {
 		return fmt.Errorf("ping: %w", err)
 	}
 
+	d.db = db
+
 	d.writer, err = writer.NewWriter(ctx, writer.Params{
 		DB:         db,
-		Table:      d.cfg.Table,
-		KeyColumns: d.cfg.KeyColumns,
+		Table:      d.config.Table,
+		KeyColumns: d.config.KeyColumns,
 	})
 	if err != nil {
 		return fmt.Errorf("new writer: %w", err)
