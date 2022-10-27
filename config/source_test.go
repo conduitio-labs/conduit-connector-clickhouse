@@ -16,6 +16,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -130,7 +131,7 @@ func TestParseSource(t *testing.T) {
 				KeyColumns: "id",
 				Columns:    "id,name,age",
 			},
-			err: errors.New(`columns must include orderingColumn`),
+			err: errors.New("validate config columns: columns must include orderingColumn"),
 		},
 		{
 			name: "invalid config, missed key",
@@ -140,7 +141,7 @@ func TestParseSource(t *testing.T) {
 				Columns:        "id,name,age",
 				OrderingColumn: "id",
 			},
-			err: errors.New(`"keyColumns" value must be set`),
+			err: errors.New(`validate source config: "keyColumns" value must be set`),
 		},
 		{
 			name: "invalid config, invalid batch size",
@@ -162,7 +163,7 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "name",
 				Columns:        "name,age",
 			},
-			err: errOrderingColumnInclude,
+			err: fmt.Errorf("validate config columns: %s", errOrderingColumnInclude),
 		},
 		{
 			name: "invalid config, missed keyColumn in columns",
@@ -173,7 +174,7 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "name",
 				Columns:        "id,age",
 			},
-			err: errKeyColumnsInclude,
+			err: fmt.Errorf("validate config columns: %w", errKeyColumnsInclude),
 		},
 		{
 			name: "invalid config, keyColumn is required",
@@ -184,7 +185,7 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     ",",
 				Columns:        "id,age",
 			},
-			err: errRequired(KeyColumns),
+			err: fmt.Errorf("validate source config: %w", errRequired(KeyColumns)),
 		},
 		{
 			name: "invalid config, BatchSize is too big",
@@ -195,7 +196,7 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "id",
 				BatchSize:      "100001",
 			},
-			err: errOutOfRange(BatchSize),
+			err: fmt.Errorf("validate source config: %w", errOutOfRange(BatchSize)),
 		},
 		{
 			name: "invalid config, BatchSize is zero",
@@ -206,7 +207,7 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "id",
 				BatchSize:      "0",
 			},
-			err: errOutOfRange(BatchSize),
+			err: fmt.Errorf("validate source config: %w", errOutOfRange(BatchSize)),
 		},
 		{
 			name: "invalid config, BatchSize is negative",
@@ -217,7 +218,7 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "id",
 				BatchSize:      "-1",
 			},
-			err: errOutOfRange(BatchSize),
+			err: fmt.Errorf("validate source config: %w", errOutOfRange(BatchSize)),
 		},
 	}
 
