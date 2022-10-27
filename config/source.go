@@ -49,7 +49,7 @@ type Source struct {
 func ParseSource(cfg map[string]string) (Source, error) {
 	config, err := parseGeneral(cfg)
 	if err != nil {
-		return Source{}, err
+		return Source{}, fmt.Errorf("parse general config: %w", err)
 	}
 
 	sourceConfig := Source{
@@ -75,7 +75,7 @@ func ParseSource(cfg map[string]string) (Source, error) {
 
 		err = validateColumns(sourceConfig.OrderingColumn, sourceConfig.KeyColumns, sourceConfig.Columns)
 		if err != nil {
-			return Source{}, err
+			return Source{}, fmt.Errorf("validate config columns: %w", err)
 		}
 	}
 
@@ -88,7 +88,7 @@ func ParseSource(cfg map[string]string) (Source, error) {
 
 	err = validate(sourceConfig)
 	if err != nil {
-		return Source{}, err
+		return Source{}, fmt.Errorf("validate source config: %w", err)
 	}
 
 	return sourceConfig, nil
