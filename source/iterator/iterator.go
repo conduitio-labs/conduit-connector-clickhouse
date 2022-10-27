@@ -57,7 +57,6 @@ type Iterator struct {
 type Params struct {
 	DB               *sqlx.DB
 	LastProcessedVal any
-	URL              string
 	Table            string
 	KeyColumns       []string
 	OrderingColumn   string

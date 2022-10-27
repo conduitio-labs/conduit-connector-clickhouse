@@ -129,7 +129,6 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 	s.iterator, err = iterator.New(ctx, iterator.Params{
 		DB:               db,
 		LastProcessedVal: lastProcessedVal,
-		URL:              s.config.URL,
 		Table:            s.config.Table,
 		KeyColumns:       s.config.KeyColumns,
 		OrderingColumn:   s.config.OrderingColumn,
