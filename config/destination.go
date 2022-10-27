@@ -14,7 +14,10 @@
 
 package config
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // A Destination represents a destination configuration needed to connect to ClickHouse database.
 type Destination struct {
@@ -28,7 +31,7 @@ type Destination struct {
 func ParseDestination(cfg map[string]string) (Destination, error) {
 	config, err := parseGeneral(cfg)
 	if err != nil {
-		return Destination{}, err
+		return Destination{}, fmt.Errorf("parse general config: %w", err)
 	}
 
 	destinationConfig := Destination{
