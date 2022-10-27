@@ -14,7 +14,10 @@
 
 package config
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	// URL is the configuration name of the url.
@@ -42,7 +45,7 @@ func parseGeneral(cfg map[string]string) (general, error) {
 
 	err := validate(config)
 	if err != nil {
-		return general{}, err
+		return general{}, fmt.Errorf("validate general config: %w", err)
 	}
 
 	return config, nil

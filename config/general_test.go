@@ -15,6 +15,7 @@
 package config
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -46,19 +47,19 @@ func TestParseGeneral(t *testing.T) {
 			in: map[string]string{
 				Table: "test_table",
 			},
-			err: errRequired(URL),
+			err: fmt.Errorf("validate general config: %w", errRequired(URL)),
 		},
 		{
 			name: "table is required",
 			in: map[string]string{
 				URL: "test_user/test_pass_123@localhost:1521/db_name",
 			},
-			err: errRequired(Table),
+			err: fmt.Errorf("validate general config: %w", errRequired(Table)),
 		},
 		{
 			name: "a couple required fields are empty (a password and an url)",
 			in:   map[string]string{},
-			err:  multierr.Combine(errRequired(URL), errRequired(Table)),
+			err:  fmt.Errorf("validate general config: %w", multierr.Combine(errRequired(URL), errRequired(Table))),
 		},
 	}
 

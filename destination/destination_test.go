@@ -51,7 +51,8 @@ func TestDestination_Configure_Fail(t *testing.T) {
 	err := d.Configure(context.Background(), map[string]string{
 		config.URL: "http://username:password@host1:8123/database",
 	})
-	is.Equal(err.Error(), "parse destination config: \"table\" value must be set")
+	is.Equal(err.Error(),
+		`parse destination config: parse general config: validate general config: "table" value must be set`)
 }
 
 func TestDestination_Write_Success(t *testing.T) {
@@ -132,7 +133,7 @@ func TestDestination_Write_Fail_NoPayload(t *testing.T) {
 	}
 
 	written, err := d.Write(ctx, []sdk.Record{record})
-	is.Equal(err.Error(), "key {\"id\":1}: no payload")
+	is.Equal(err.Error(), `key {"id":1}: no payload`)
 	is.Equal(written, 0)
 }
 
