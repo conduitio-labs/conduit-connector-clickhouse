@@ -52,9 +52,10 @@ with the specified table.
 
 ## Source
 
-The ClickHouse Source allows you to move data from the ClickHouse table to any Conduit Destination. When the connector
-starts, all the data in the table is transferred to the Destination. After all the data is transferred, the connector
-will transfer the newly added data.
+The ClickHouse Source allows you to move data from the ClickHouse table to Conduit Destination connectors.
+
+When the connector starts, all the data in the table is transferred to the Destination. After all the data is
+transferred, the connector will transfer the newly added data.
 
 **Important**: update and delete operations are not supported.
 
