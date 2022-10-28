@@ -60,7 +60,7 @@ will transfer the newly added data.
 
 ### Position
 
-The position contains the last processed element value.
+The position contains the last processed element value (e.g.: `42`, `"John"`, or `"2009-11-10 23:00:00"`).
 
 ### Configuration Options
 
