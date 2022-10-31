@@ -54,10 +54,11 @@ with the specified table.
 
 The ClickHouse Source allows you to move data from the ClickHouse table to Conduit Destination connectors.
 
-The iterator reads rows from the selected table in batches via SELECT with ordering by orderingColumn, where the
-orderingColumn values are greater than the position value.
+The iterator reads rows from the selected table in batches via SELECT with ordering by `orderingColumn`, where the
+`orderingColumn` values are greater than the position value. After all rows have been read, the iterator will read the
+newly inserted rows.
 
-**Important**: update and delete operations are not supported.
+The Source Connector does not support the capture of updated or deleted data.
 
 ### Position
 
