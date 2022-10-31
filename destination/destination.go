@@ -34,7 +34,7 @@ type Writer interface {
 	Delete(context.Context, sdk.Record) error
 }
 
-// A Destination represents the destination connector.
+// Destination is a Clickhouse destination plugin.
 type Destination struct {
 	sdk.UnimplementedDestination
 
@@ -59,7 +59,7 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 		config.Table: {
 			Default:     "",
 			Required:    true,
-			Description: "The table name of the table in ClickHouse that the connector should write to, by default.",
+			Description: "The ClickHouse table name that the connector should write to, by default.",
 		},
 		config.KeyColumns: {
 			Default:  "",

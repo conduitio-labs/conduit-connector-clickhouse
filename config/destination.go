@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-// A Destination represents a destination configuration needed to connect to ClickHouse database.
+// Destination is a destination configuration needed to connect to ClickHouse database.
 type Destination struct {
 	configuration
 

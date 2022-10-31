@@ -28,7 +28,7 @@ const (
 	KeyColumns = "keyColumns"
 )
 
-// represents a general configuration needed to connect to ClickHouse database.
+// general configuration needed to connect to ClickHouse database.
 type configuration struct {
 	// URL is the configuration of the connection string to connect to ClickHouse database.
 	URL string `json:"url" validate:"required"`
