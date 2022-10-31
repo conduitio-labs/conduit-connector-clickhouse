@@ -20,7 +20,7 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-// Connector represents a sdk.Connector of ClickHouse.
+// Connector is a sdk.Connector of ClickHouse.
 var Connector = sdk.Connector{
 	NewSpecification: Specification,
 	NewSource:        source.NewSource,

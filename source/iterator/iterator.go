@@ -33,7 +33,7 @@ const (
 	whereClauseFmt     = " WHERE %s > ?"
 )
 
-// Iterator - an implementation of an iterator for ClickHouse.
+// Iterator is an implementation of an iterator for ClickHouse.
 type Iterator struct {
 	db   *sqlx.DB
 	rows *sqlx.Rows
@@ -53,7 +53,7 @@ type Iterator struct {
 	batchSize int
 }
 
-// Params - an incoming iterator params for the New function.
+// Params is an incoming iterator params for the New function.
 type Params struct {
 	DB               *sqlx.DB
 	LastProcessedVal any

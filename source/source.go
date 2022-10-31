@@ -36,7 +36,7 @@ type Iterator interface {
 	Stop() error
 }
 
-// Source connector.
+// Source is a ClickHouse source plugin.
 type Source struct {
 	sdk.UnimplementedSource
 
@@ -64,9 +64,10 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 			Description: "The ClickHouse table name that the connector should write to, by default.",
 		},
 		config.KeyColumns: {
-			Default:     "",
-			Required:    true,
-			Description: "The names of the columns to build the record.Key, separated by commas.",
+			Default:  "",
+			Required: true,
+			Description: "The names of the columns to build the record.Key, separated by commas. " +
+				"The column names are the keys of the record.Key map, and the values are taken from the row.",
 		},
 		config.OrderingColumn: {
 			Default:     "",
