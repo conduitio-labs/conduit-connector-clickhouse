@@ -54,8 +54,8 @@ with the specified table.
 
 The ClickHouse Source allows you to move data from the ClickHouse table to Conduit Destination connectors.
 
-When the connector starts, all the data in the table is transferred to the Destination. After all the data is
-transferred, the connector will transfer the newly added data.
+The iterator reads rows from the selected table in batches via SELECT with ordering by orderingColumn, where the
+orderingColumn values are greater than the position value.
 
 **Important**: update and delete operations are not supported.
 
