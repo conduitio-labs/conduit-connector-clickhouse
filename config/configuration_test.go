@@ -74,7 +74,7 @@ func TestParseGeneral(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := parseGeneral(tt.in)
+			got, err := parseConfiguration(tt.in)
 			if err != nil {
 				if tt.err == nil {
 					t.Errorf("unexpected error: %s", err.Error())

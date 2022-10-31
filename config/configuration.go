@@ -37,7 +37,7 @@ type configuration struct {
 }
 
 // parses a general configuration.
-func parseGeneral(cfg map[string]string) (configuration, error) {
+func parseConfiguration(cfg map[string]string) (configuration, error) {
 	config := configuration{
 		URL:   strings.TrimSpace(cfg[URL]),
 		Table: strings.TrimSpace(cfg[Table]),
