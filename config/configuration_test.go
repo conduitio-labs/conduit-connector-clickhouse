@@ -22,37 +22,42 @@ import (
 	"go.uber.org/multierr"
 )
 
+const (
+	url   = "http://username:password@host1:8123/database"
+	table = "test_table"
+)
+
 func TestParseGeneral(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name string
 		in   map[string]string
-		want General
+		want Configuration
 		err  error
 	}{
 		{
 			name: "valid config",
 			in: map[string]string{
-				URL:   "http://username:password@host1:8123/database",
-				Table: "test_table",
+				URL:   url,
+				Table: table,
 			},
-			want: General{
-				URL:   "http://username:password@host1:8123/database",
-				Table: "test_table",
+			want: Configuration{
+				URL:   url,
+				Table: table,
 			},
 		},
 		{
 			name: "url is required",
 			in: map[string]string{
-				Table: "test_table",
+				Table: table,
 			},
 			err: fmt.Errorf("validate general config: %w", errRequired(URL)),
 		},
 		{
 			name: "table is required",
 			in: map[string]string{
-				URL: "test_user/test_pass_123@localhost:1521/db_name",
+				URL: url,
 			},
 			err: fmt.Errorf("validate general config: %w", errRequired(Table)),
 		},
@@ -69,7 +74,7 @@ func TestParseGeneral(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := parseGeneral(tt.in)
+			got, err := parseConfiguration(tt.in)
 			if err != nil {
 				if tt.err == nil {
 					t.Errorf("unexpected error: %s", err.Error())

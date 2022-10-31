@@ -31,15 +31,15 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "valid config",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id ,name , ,  ,,",
 			},
 			want: Source{
-				General: General{
-					URL:   "http://username:password@host1:8123/database",
-					Table: "test_table",
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id", "name"},
@@ -49,16 +49,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "valid config, custom batch size",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id,name",
 				BatchSize:      "100",
 			},
 			want: Source{
-				General: General{
-					URL:   "http://username:password@host1:8123/database",
-					Table: "test_table",
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
 				},
 				KeyColumns:     []string{"id", "name"},
 				OrderingColumn: "id",
@@ -68,16 +68,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "valid config, batch size is maximum",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "100000",
 			},
 			want: Source{
-				General: General{
-					URL:   "http://username:password@host1:8123/database",
-					Table: "test_table",
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -87,16 +87,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "valid config, batch size is minimum",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "1",
 			},
 			want: Source{
-				General: General{
-					URL:   "http://username:password@host1:8123/database",
-					Table: "test_table",
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -106,16 +106,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "valid config, custom columns",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        "id, name,age",
 			},
 			want: Source{
-				General: General{
-					URL:   "http://username:password@host1:8123/database",
-					Table: "test_table",
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -126,8 +126,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "invalid config, missed ordering column",
 			in: map[string]string{
-				URL:        "http://username:password@host1:8123/database",
-				Table:      "test_table",
+				URL:        url,
+				Table:      table,
 				KeyColumns: "id",
 				Columns:    "id,name,age",
 			},
@@ -136,8 +136,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "invalid config, missed key",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				Columns:        "id,name,age",
 				OrderingColumn: "id",
 			},
@@ -146,8 +146,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "invalid config, invalid batch size",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "a",
@@ -157,8 +157,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "invalid config, missed orderingColumn in columns",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "name",
 				Columns:        "name,age",
@@ -168,8 +168,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "invalid config, missed keyColumn in columns",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "name",
 				Columns:        "id,age",
@@ -179,8 +179,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "invalid config, keyColumn is required",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     ",",
 				Columns:        "id,age",
@@ -190,8 +190,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "invalid config, BatchSize is too big",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "100001",
@@ -201,8 +201,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "invalid config, BatchSize is zero",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "0",
@@ -212,8 +212,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "invalid config, BatchSize is negative",
 			in: map[string]string{
-				URL:            "http://username:password@host1:8123/database",
-				Table:          "test_table",
+				URL:            url,
+				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "-1",

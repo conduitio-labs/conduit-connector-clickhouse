@@ -27,6 +27,11 @@ import (
 	"github.com/matryer/is"
 )
 
+const (
+	url   = "http://username:password@host1:8123/database"
+	table = "test_table"
+)
+
 func TestDestination_Configure_Success(t *testing.T) {
 	t.Parallel()
 
@@ -35,8 +40,8 @@ func TestDestination_Configure_Success(t *testing.T) {
 	d := NewDestination()
 
 	err := d.Configure(context.Background(), map[string]string{
-		config.URL:   "http://username:password@host1:8123/database",
-		config.Table: "test_table",
+		config.URL:   url,
+		config.Table: table,
 	})
 	is.NoErr(err)
 }
@@ -49,7 +54,7 @@ func TestDestination_Configure_Fail(t *testing.T) {
 	d := NewDestination()
 
 	err := d.Configure(context.Background(), map[string]string{
-		config.URL: "http://username:password@host1:8123/database",
+		config.URL: url,
 	})
 	is.Equal(err.Error(),
 		`parse destination config: parse general config: validate general config: "table" value must be set`)

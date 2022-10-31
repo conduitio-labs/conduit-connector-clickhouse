@@ -29,8 +29,8 @@ const (
 	KeyColumns = "keyColumns"
 )
 
-// General represents a general configuration needed to connect to ClickHouse database.
-type General struct {
+// Configuration represents a general configuration needed to connect to ClickHouse database.
+type Configuration struct {
 	// URL is the configuration of the connection string to connect to ClickHouse database.
 	URL string `json:"url" validate:"required"`
 	// Table is the configuration of the table name.
@@ -38,15 +38,15 @@ type General struct {
 }
 
 // parses a general configuration.
-func parseGeneral(cfg map[string]string) (General, error) {
-	config := General{
+func parseConfiguration(cfg map[string]string) (Configuration, error) {
+	config := Configuration{
 		URL:   strings.TrimSpace(cfg[URL]),
 		Table: strings.TrimSpace(cfg[Table]),
 	}
 
 	err := validate(config)
 	if err != nil {
-		return General{}, fmt.Errorf("validate general config: %w", err)
+		return Configuration{}, fmt.Errorf("validate general config: %w", err)
 	}
 
 	return config, nil

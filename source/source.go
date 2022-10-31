@@ -61,7 +61,7 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 		config.Table: {
 			Default:     "",
 			Required:    true,
-			Description: "The table name of the table in ClickHouse that the connector should write to, by default.",
+			Description: "The ClickHouse table name that the connector should write to, by default.",
 		},
 		config.KeyColumns: {
 			Default:     "",

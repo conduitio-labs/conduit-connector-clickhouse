@@ -31,9 +31,9 @@ const (
 	defaultBatchSize = 1000
 )
 
-// A Source represents a source configuration.
+// Source - a source configuration.
 type Source struct {
-	General
+	Configuration
 
 	// KeyColumns is the configuration of key column names, separated by commas.
 	KeyColumns []string `validate:"required"`
@@ -47,13 +47,13 @@ type Source struct {
 
 // ParseSource parses source configuration.
 func ParseSource(cfg map[string]string) (Source, error) {
-	config, err := parseGeneral(cfg)
+	config, err := parseConfiguration(cfg)
 	if err != nil {
 		return Source{}, fmt.Errorf("parse general config: %w", err)
 	}
 
 	sourceConfig := Source{
-		General:        config,
+		Configuration:  config,
 		OrderingColumn: cfg[OrderingColumn],
 		BatchSize:      defaultBatchSize,
 	}

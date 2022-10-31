@@ -33,27 +33,27 @@ const (
 	whereClauseFmt     = " WHERE %s > ?"
 )
 
-// Iterator represents an implementation of an iterator for ClickHouse.
+// Iterator - an implementation of an iterator for ClickHouse.
 type Iterator struct {
 	db   *sqlx.DB
 	rows *sqlx.Rows
 
-	// represents a position
+	// last processed orderingColumn value
 	lastProcessedVal any
-	// represents a table name
+	// table name
 	table string
-	// represents a name of column what iterator use for setting key in record
+	// name of the column that iterator will use for setting key in record
 	keyColumns []string
-	// represents a name of column what iterator use for sorting data
+	// name of the column that iterator will use for sorting data
 	orderingColumn string
-	// represents a list of table's columns for record payload.
+	// list of table's columns for record payload.
 	// if empty - will get all columns
 	columns []string
-	// represents a size of batch
+	// size of batch
 	batchSize int
 }
 
-// Params represents an incoming iterator params for the New function.
+// Params - an incoming iterator params for the New function.
 type Params struct {
 	DB               *sqlx.DB
 	LastProcessedVal any

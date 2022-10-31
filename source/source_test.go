@@ -26,22 +26,27 @@ import (
 	"github.com/matryer/is"
 )
 
+const (
+	url   = "http://username:password@host1:8123/database"
+	table = "test_table"
+)
+
 func TestSource_Configure(t *testing.T) {
 	is := is.New(t)
 
 	s := Source{}
 
 	err := s.Configure(context.Background(), map[string]string{
-		config.URL:            "http://username:password@host1:8123/database",
-		config.Table:          "test_table",
+		config.URL:            url,
+		config.Table:          table,
 		config.KeyColumns:     "id",
 		config.OrderingColumn: "created_at",
 	})
 	is.NoErr(err)
 	is.Equal(s.config, config.Source{
-		General: config.General{
-			URL:   "http://username:password@host1:8123/database",
-			Table: "test_table",
+		Configuration: config.Configuration{
+			URL:   url,
+			Table: table,
 		},
 		KeyColumns:     []string{"id"},
 		OrderingColumn: "created_at",
@@ -55,8 +60,8 @@ func TestSource_Configure_fail(t *testing.T) {
 	s := Source{}
 
 	err := s.Configure(context.Background(), map[string]string{
-		config.URL:        "http://username:password@host1:8123/database",
-		config.Table:      "test_table",
+		config.URL:        url,
+		config.Table:      table,
 		config.KeyColumns: "id",
 	})
 	is.True(err != nil)
