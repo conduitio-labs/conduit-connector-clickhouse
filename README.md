@@ -49,3 +49,28 @@ connector, as long as the user has proper access to those tables.
 
 Creating a Destination connector will fail if the table does not exist or if the user does not have permission to work
 with the specified table.
+
+## Source
+
+The ClickHouse Source allows you to move data from the ClickHouse table to Conduit Destination connectors.
+
+The iterator reads rows from the selected table in batches via SELECT with ordering by `orderingColumn`, where the
+`orderingColumn` values are greater than the position value. After all rows have been read, the iterator will read the
+newly inserted rows.
+
+The Source Connector does not support the capture of updated or deleted data.
+
+### Position
+
+The position contains the last processed element value (e.g.: `42`, `"John"`, or `"2009-11-10 23:00:00"`).
+
+### Configuration Options
+
+| name             | description                                                                                                                                                             | required | example                                        |
+|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|------------------------------------------------|
+| `url`            | The [DSN](https://github.com/ClickHouse/clickhouse-go#dsn) to connect to the database.                                                                                  | **true** | `http://username:password@host1:8123/database` |
+| `table`          | The name of a table in the database that the connector should write to, by default.                                                                                     | **true** | `table_name`                                   |
+| `keyColumns`     | The names of the columns to build the `sdk.Record.Key`, separated by commas.                                                                                            | **true** | `id,name`                                      |
+| `orderingColumn` | The column name that the connector will use for ordering rows. Column must contain unique values and suitable for sorting, otherwise the snapshot won't work correctly. | **true** | `id`                                           |
+| `columns`        | The list of column names that should be included in each payload of the `sdk.Record`, by default includes all columns.                                                  | false    | `id,name,age`                                  |
+| `batchSize`      | The size of rows batch. Min is 1 and max is 100000. The default is 1000.                                                                                                | false    | `100`                                          |
