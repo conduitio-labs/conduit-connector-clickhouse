@@ -110,7 +110,7 @@ func TestParseSource(t *testing.T) {
 				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
-				Columns:        "id, name,age",
+				Columns:        "id ,name ,age ,  ,,",
 			},
 			want: Source{
 				Configuration: Configuration{
