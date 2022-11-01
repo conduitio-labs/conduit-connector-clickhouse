@@ -64,6 +64,12 @@ The Source Connector does not support the capture of updated or deleted data.
 
 The position contains the last processed element value (e.g.: `42`, `"John"`, or `"2009-11-10 23:00:00"`).
 
+### Table Name
+
+If a record contains a `clickhouse.table` property in its metadata, it will work with this table, otherwise, it will
+fall back to use the table configured in the connector. Thus, a Destination can support multiple tables in a single
+connector, as long as the user has proper access to those tables.
+
 ### Configuration Options
 
 | name             | description                                                                                                                                                              | required | example                                        |

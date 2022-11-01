@@ -32,12 +32,12 @@ import (
 type driver struct {
 	sdk.ConfigurableAcceptanceTestDriver
 
-	counter int32
+	id int32
 }
 
 // GenerateRecord generates a random sdk.Record.
 func (d *driver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Record {
-	atomic.AddInt32(&d.counter, 1)
+	atomic.AddInt32(&d.id, 1)
 
 	return sdk.Record{
 		Position:  nil,
@@ -46,10 +46,10 @@ func (d *driver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Recor
 			"clickhouse.table": d.Config.SourceConfig[config.Table],
 		},
 		Key: sdk.StructuredData{
-			"int_type": d.counter,
+			"int_type": d.id,
 		},
 		Payload: sdk.Change{After: sdk.RawData(
-			fmt.Sprintf(`{"int_type":%d,"string_type":"%s"}`, d.counter, uuid.NewString()),
+			fmt.Sprintf(`{"int_type":%d,"string_type":"%s"}`, d.id, uuid.NewString()),
 		)},
 	}
 }
