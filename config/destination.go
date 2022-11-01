@@ -44,9 +44,12 @@ func ParseDestination(cfg map[string]string) (Destination, error) {
 
 	keyColumns := strings.Split(cfg[KeyColumns], ",")
 	for i := range keyColumns {
-		if keyColumn := strings.TrimSpace(keyColumns[i]); keyColumn != "" {
-			destinationConfig.KeyColumns = append(destinationConfig.KeyColumns, keyColumn)
+		keyColumn := strings.TrimSpace(keyColumns[i])
+		if keyColumn == "" {
+			return Destination{}, fmt.Errorf("invalid %q", KeyColumns)
 		}
+
+		destinationConfig.KeyColumns = append(destinationConfig.KeyColumns, keyColumn)
 	}
 
 	return destinationConfig, nil

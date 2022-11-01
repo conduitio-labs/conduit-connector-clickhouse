@@ -15,13 +15,14 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"testing"
 )
 
 func TestParseSource(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		in   map[string]string
@@ -29,12 +30,12 @@ func TestParseSource(t *testing.T) {
 		err  error
 	}{
 		{
-			name: "valid config",
+			name: "success_required_values",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
 				OrderingColumn: "id",
-				KeyColumns:     "id ,name , ,  ,,",
+				KeyColumns:     "id,name",
 			},
 			want: Source{
 				Configuration: Configuration{
@@ -47,7 +48,7 @@ func TestParseSource(t *testing.T) {
 			},
 		},
 		{
-			name: "valid config, custom batch size",
+			name: "success_batchSize",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -66,7 +67,7 @@ func TestParseSource(t *testing.T) {
 			},
 		},
 		{
-			name: "valid config, batch size is maximum",
+			name: "success_batchSize_max",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -85,7 +86,7 @@ func TestParseSource(t *testing.T) {
 			},
 		},
 		{
-			name: "valid config, batch size is minimum",
+			name: "success_batchSize_min",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -104,13 +105,13 @@ func TestParseSource(t *testing.T) {
 			},
 		},
 		{
-			name: "valid config, custom columns",
+			name: "success_columns_has_one_key",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
-				Columns:        "id ,name ,age ,  ,,",
+				Columns:        "id",
 			},
 			want: Source{
 				Configuration: Configuration{
@@ -120,31 +121,151 @@ func TestParseSource(t *testing.T) {
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
 				BatchSize:      defaultBatchSize,
-				Columns:        []string{"id", "name", "age"},
+				Columns:        []string{"id"},
 			},
 		},
 		{
-			name: "invalid config, missed ordering column",
+			name: "success_columns_has_one_key",
+			in: map[string]string{
+				URL:            url,
+				Table:          table,
+				OrderingColumn: "id",
+				KeyColumns:     "id",
+				Columns:        "id,name",
+			},
+			want: Source{
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
+				},
+				OrderingColumn: "id",
+				KeyColumns:     []string{"id"},
+				BatchSize:      defaultBatchSize,
+				Columns:        []string{"id", "name"},
+			},
+		},
+		{
+			name: "success_columns_space_between_keys",
+			in: map[string]string{
+				URL:            url,
+				Table:          table,
+				OrderingColumn: "id",
+				KeyColumns:     "id",
+				Columns:        "id, name",
+			},
+			want: Source{
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
+				},
+				OrderingColumn: "id",
+				KeyColumns:     []string{"id"},
+				BatchSize:      defaultBatchSize,
+				Columns:        []string{"id", "name"},
+			},
+		},
+		{
+			name: "success_columns_ends_with_space",
+			in: map[string]string{
+				URL:            url,
+				Table:          table,
+				OrderingColumn: "id",
+				KeyColumns:     "id",
+				Columns:        "id,name ",
+			},
+			want: Source{
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
+				},
+				OrderingColumn: "id",
+				KeyColumns:     []string{"id"},
+				BatchSize:      defaultBatchSize,
+				Columns:        []string{"id", "name"},
+			},
+		},
+		{
+			name: "success_columns_starts_with_space",
+			in: map[string]string{
+				URL:            url,
+				Table:          table,
+				OrderingColumn: "id",
+				KeyColumns:     "id",
+				Columns:        " id,name",
+			},
+			want: Source{
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
+				},
+				OrderingColumn: "id",
+				KeyColumns:     []string{"id"},
+				BatchSize:      defaultBatchSize,
+				Columns:        []string{"id", "name"},
+			},
+		},
+		{
+			name: "success_columns_space_between_keys_before_comma",
+			in: map[string]string{
+				URL:            url,
+				Table:          table,
+				OrderingColumn: "id",
+				KeyColumns:     "id",
+				Columns:        "id ,name",
+			},
+			want: Source{
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
+				},
+				OrderingColumn: "id",
+				KeyColumns:     []string{"id"},
+				BatchSize:      defaultBatchSize,
+				Columns:        []string{"id", "name"},
+			},
+		},
+		{
+			name: "success_columns_two_spaces",
+			in: map[string]string{
+				URL:            url,
+				Table:          table,
+				OrderingColumn: "id",
+				KeyColumns:     "id",
+				Columns:        "id,  name",
+			},
+			want: Source{
+				Configuration: Configuration{
+					URL:   url,
+					Table: table,
+				},
+				OrderingColumn: "id",
+				KeyColumns:     []string{"id"},
+				BatchSize:      defaultBatchSize,
+				Columns:        []string{"id", "name"},
+			},
+		},
+		{
+			name: "failure_required_orderingColumn",
 			in: map[string]string{
 				URL:        url,
 				Table:      table,
 				KeyColumns: "id",
 				Columns:    "id,name,age",
 			},
-			err: errors.New("validate config columns: columns must include orderingColumn"),
+			err: fmt.Errorf("%q must be set", OrderingColumn),
 		},
 		{
-			name: "invalid config, missed key",
+			name: "failure_required_keyColumns",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
 				Columns:        "id,name,age",
 				OrderingColumn: "id",
 			},
-			err: errors.New(`validate source config: "keyColumns" value must be set`),
+			err: fmt.Errorf("%q must be set", KeyColumns),
 		},
 		{
-			name: "invalid config, invalid batch size",
+			name: "failure_invalid_batchSize",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -152,10 +273,10 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "id",
 				BatchSize:      "a",
 			},
-			err: errors.New(`parse BatchSize: strconv.Atoi: parsing "a": invalid syntax`),
+			err: fmt.Errorf(`invalid %q: strconv.Atoi: parsing "a": invalid syntax`, BatchSize),
 		},
 		{
-			name: "invalid config, missed orderingColumn in columns",
+			name: "failure_missed_orderingColumn_in_columns",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -163,10 +284,10 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "name",
 				Columns:        "name,age",
 			},
-			err: fmt.Errorf("validate config columns: %s", errOrderingColumnInclude),
+			err: fmt.Errorf("columns must include %q", OrderingColumn),
 		},
 		{
-			name: "invalid config, missed keyColumn in columns",
+			name: "failure_missed_keyColumn_in_columns",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -174,10 +295,10 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "name",
 				Columns:        "id,age",
 			},
-			err: fmt.Errorf("validate config columns: %w", errKeyColumnsInclude),
+			err: fmt.Errorf("columns must include all %q", KeyColumns),
 		},
 		{
-			name: "invalid config, keyColumn is required",
+			name: "failure_invalid_keyColumns",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -185,10 +306,10 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     ",",
 				Columns:        "id,age",
 			},
-			err: fmt.Errorf("validate source config: %w", errRequired(KeyColumns)),
+			err: fmt.Errorf("invalid %q", KeyColumns),
 		},
 		{
-			name: "invalid config, BatchSize is too big",
+			name: "failure_batchSize_is_too_big",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -196,10 +317,10 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "id",
 				BatchSize:      "100001",
 			},
-			err: fmt.Errorf("validate source config: %w", errOutOfRange(BatchSize)),
+			err: fmt.Errorf("%w", fmt.Errorf("%q is out of range", BatchSize)),
 		},
 		{
-			name: "invalid config, BatchSize is zero",
+			name: "failure_batchSize_is_zero",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -207,10 +328,10 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "id",
 				BatchSize:      "0",
 			},
-			err: fmt.Errorf("validate source config: %w", errOutOfRange(BatchSize)),
+			err: fmt.Errorf("%w", fmt.Errorf("%q is out of range", BatchSize)),
 		},
 		{
-			name: "invalid config, BatchSize is negative",
+			name: "failure_batchSize_is_negative",
 			in: map[string]string{
 				URL:            url,
 				Table:          table,
@@ -218,12 +339,38 @@ func TestParseSource(t *testing.T) {
 				KeyColumns:     "id",
 				BatchSize:      "-1",
 			},
-			err: fmt.Errorf("validate source config: %w", errOutOfRange(BatchSize)),
+			err: fmt.Errorf("%w", fmt.Errorf("%q is out of range", BatchSize)),
+		},
+		{
+			name: "failure_columns_ends_with_comma",
+			in: map[string]string{
+				URL:            url,
+				Table:          table,
+				OrderingColumn: "id",
+				KeyColumns:     "id",
+				Columns:        "id,name,",
+			},
+			err: fmt.Errorf("invalid %q", Columns),
+		},
+		{
+			name: "failure_columns_starts_with_comma",
+			in: map[string]string{
+				URL:            url,
+				Table:          table,
+				OrderingColumn: "id",
+				KeyColumns:     "id",
+				Columns:        ",id,name",
+			},
+			err: fmt.Errorf("invalid %q", Columns),
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
+
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := ParseSource(tt.in)
 			if err != nil {
 				if tt.err == nil {

@@ -57,7 +57,7 @@ func TestDestination_Configure_Fail(t *testing.T) {
 		config.URL: url,
 	})
 	is.Equal(err.Error(),
-		`parse destination config: parse general config: validate general config: "table" value must be set`)
+		`parse destination config: parse general config: validate general config: "table" must be set`)
 }
 
 func TestDestination_Write_Success(t *testing.T) {

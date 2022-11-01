@@ -58,7 +58,7 @@ func TestSource_Read_noTable(t *testing.T) {
 	is.NoErr(err)
 
 	err = src.Open(ctx, nil)
-	is.True(err != nil)
+	is.True(strings.Contains(err.Error(), "new iterator: load rows: execute select query"))
 
 	cancel()
 }
