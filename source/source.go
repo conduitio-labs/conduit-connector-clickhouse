@@ -95,7 +95,7 @@ func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error 
 
 	cfg, err := config.ParseSource(cfgRaw)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse source config: %w", err)
 	}
 
 	s.config = cfg

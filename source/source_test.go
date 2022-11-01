@@ -64,7 +64,7 @@ func TestSource_Configure_fail(t *testing.T) {
 		config.Table:      table,
 		config.KeyColumns: "id",
 	})
-	is.True(err != nil)
+	is.Equal(err.Error(), `parse source config: "orderingColumn" must be set`)
 }
 
 func TestSource_Read(t *testing.T) {
@@ -111,7 +111,7 @@ func TestSource_Read_hasNextFail(t *testing.T) {
 	}
 
 	_, err := s.Read(ctx)
-	is.True(err != nil)
+	is.Equal(err.Error(), "has next: get data: fail")
 }
 
 func TestSource_Read_nextFail(t *testing.T) {
@@ -129,7 +129,7 @@ func TestSource_Read_nextFail(t *testing.T) {
 	}
 
 	_, err := s.Read(ctx)
-	is.True(err != nil)
+	is.Equal(err.Error(), "next: key is not exist")
 }
 
 func TestSource_Teardown(t *testing.T) {
@@ -163,5 +163,5 @@ func TestSource_Teardown_fail(t *testing.T) {
 	}
 
 	err := s.Teardown(context.Background())
-	is.True(err != nil)
+	is.Equal(err.Error(), "some error")
 }

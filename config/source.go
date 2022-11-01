@@ -58,37 +58,57 @@ func ParseSource(cfg map[string]string) (Source, error) {
 		BatchSize:      defaultBatchSize,
 	}
 
-	keyColumns := strings.Split(cfg[KeyColumns], ",")
-	for i := range keyColumns {
-		if keyColumn := strings.TrimSpace(keyColumns[i]); keyColumn != "" {
-			sourceConfig.KeyColumns = append(sourceConfig.KeyColumns, keyColumn)
+	if cfg[KeyColumns] != "" {
+		keyColumns := strings.Split(strings.ReplaceAll(cfg[KeyColumns], " ", ""), ",")
+		for i := range keyColumns {
+			if keyColumns[i] == "" {
+				return Source{}, fmt.Errorf("invalid %q", KeyColumns)
+			}
+
+			sourceConfig.KeyColumns = append(sourceConfig.KeyColumns, keyColumns[i])
 		}
 	}
 
 	if cfg[Columns] != "" {
-		columnsSl := strings.Split(cfg[Columns], ",")
+		columnsSl := strings.Split(strings.ReplaceAll(cfg[Columns], " ", ""), ",")
 		for i := range columnsSl {
-			if column := strings.TrimSpace(columnsSl[i]); column != "" {
-				sourceConfig.Columns = append(sourceConfig.Columns, column)
+			if columnsSl[i] == "" {
+				return Source{}, fmt.Errorf("invalid %q", Columns)
 			}
-		}
 
-		err = validateColumns(sourceConfig.OrderingColumn, sourceConfig.KeyColumns, sourceConfig.Columns)
-		if err != nil {
-			return Source{}, fmt.Errorf("validate config columns: %w", err)
+			sourceConfig.Columns = append(sourceConfig.Columns, columnsSl[i])
 		}
 	}
 
 	if cfg[BatchSize] != "" {
 		sourceConfig.BatchSize, err = strconv.Atoi(cfg[BatchSize])
 		if err != nil {
-			return Source{}, fmt.Errorf("parse BatchSize: %w", err)
+			return Source{}, fmt.Errorf("invalid %q: %w", BatchSize, err)
 		}
 	}
 
 	err = validate(sourceConfig)
 	if err != nil {
-		return Source{}, fmt.Errorf("validate source config: %w", err)
+		return Source{}, err
+	}
+
+	if len(sourceConfig.Columns) == 0 {
+		return sourceConfig, nil
+	}
+
+	columnsMap := make(map[string]struct{}, len(sourceConfig.Columns))
+	for i := 0; i < len(sourceConfig.Columns); i++ {
+		columnsMap[sourceConfig.Columns[i]] = struct{}{}
+	}
+
+	if _, ok := columnsMap[sourceConfig.OrderingColumn]; !ok {
+		return Source{}, fmt.Errorf("columns must include %q", OrderingColumn)
+	}
+
+	for i := range sourceConfig.KeyColumns {
+		if _, ok := columnsMap[sourceConfig.KeyColumns[i]]; !ok {
+			return Source{}, fmt.Errorf("columns must include all %q", KeyColumns)
+		}
 	}
 
 	return sourceConfig, nil
