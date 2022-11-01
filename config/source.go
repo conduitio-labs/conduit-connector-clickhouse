@@ -59,26 +59,24 @@ func ParseSource(cfg map[string]string) (Source, error) {
 	}
 
 	if cfg[KeyColumns] != "" {
-		keyColumns := strings.Split(cfg[KeyColumns], ",")
+		keyColumns := strings.Split(strings.ReplaceAll(cfg[KeyColumns], " ", ""), ",")
 		for i := range keyColumns {
-			keyColumn := strings.TrimSpace(keyColumns[i])
-			if keyColumn == "" {
+			if keyColumns[i] == "" {
 				return Source{}, fmt.Errorf("invalid %q", KeyColumns)
 			}
 
-			sourceConfig.KeyColumns = append(sourceConfig.KeyColumns, keyColumn)
+			sourceConfig.KeyColumns = append(sourceConfig.KeyColumns, keyColumns[i])
 		}
 	}
 
 	if cfg[Columns] != "" {
-		columnsSl := strings.Split(cfg[Columns], ",")
+		columnsSl := strings.Split(strings.ReplaceAll(cfg[Columns], " ", ""), ",")
 		for i := range columnsSl {
-			column := strings.TrimSpace(columnsSl[i])
-			if column == "" {
+			if columnsSl[i] == "" {
 				return Source{}, fmt.Errorf("invalid %q", Columns)
 			}
 
-			sourceConfig.Columns = append(sourceConfig.Columns, column)
+			sourceConfig.Columns = append(sourceConfig.Columns, columnsSl[i])
 		}
 	}
 
