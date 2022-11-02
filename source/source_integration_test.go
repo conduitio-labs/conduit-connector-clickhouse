@@ -111,15 +111,15 @@ func TestSource_Read_checkTypes(t *testing.T) {
 	type dataRow struct {
 		IntType         int              `json:"Int32Type"`
 		StringType      string           `json:"StringType"`
-		FloatType       float32          `json:"float_type"`
-		DoubleType      float64          `json:"double_type"`
-		BooleanType     bool             `json:"boolean_type"`
-		UUIDType        uuid.UUID        `json:"uuid_type"`
-		DateType        time.Time        `json:"date_type"`
-		DatetimeType    time.Time        `json:"datetime_type"`
-		ArrayIntType    []int32          `json:"array_Int32Type"`
-		ArrayStringType []string         `json:"array_StringType"`
-		MapType         map[string]int32 `json:"map_type"`
+		FloatType       float32          `json:"FloatType"`
+		DoubleType      float64          `json:"DoubleType"`
+		BooleanType     bool             `json:"BooleanType"`
+		UUIDType        uuid.UUID        `json:"UUIDType"`
+		DateType        time.Time        `json:"DateType"`
+		DatetimeType    time.Time        `json:"DatetimeType"`
+		ArrayIntType    []int32          `json:"ArrayInt32Type"`
+		ArrayStringType []string         `json:"ArrayStringType"`
+		MapType         map[string]int32 `json:"MapType"`
 	}
 
 	var (
@@ -522,17 +522,17 @@ func createTable(db *sqlx.DB, table string) error {
 	_, err := db.Exec(fmt.Sprintf(`
 	CREATE TABLE %s
 	(
-		Int32Type          Int32,
-		StringType       String,
-		float_type        Float32,
-		double_type       Float64,
-		boolean_type      Bool,
-		uuid_type         UUID,
-		date_type         Date,
-		datetime_type     DateTime,
-		array_Int32Type    Array(Int32),
-		array_StringType Array(String),
-		map_type          Map(String, Int32)
+		Int32Type		Int32,
+		StringType		String,
+		FloatType		Float32,
+		DoubleType		Float64,
+		BooleanType		Bool,
+		UUIDType		UUID,
+		DateType		Date,
+		DatetimeType	DateTime,
+		ArrayInt32Type	Array(Int32),
+		ArrayStringType	Array(String),
+		MapType			Map(String, Int32)
 	) ENGINE ReplacingMergeTree() PRIMARY KEY Int32Type;`, table))
 	if err != nil {
 		return fmt.Errorf("execute create table query: %w", err)
