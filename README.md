@@ -26,6 +26,7 @@ the environment variables as an `CLICKHOUSE_URL`.
 The ClickHouse Source allows you to move data from the ClickHouse table to Conduit Destination connectors.
 
 The iterator selects existing rows from the selected table in batches with ordering and where claus:
+
 ```
 SELECT {{config.columns}}
 FROM {{config.table}}
@@ -62,12 +63,15 @@ configuration.
 ## Destination
 
 The ClickHouse Destination allows you to move data from any Conduit Source to a ClickHouse table. It takes
-a `sdk.Record` and parses it into a valid SQL query.
+a `sdk.Record` and parses it into a valid SQL
+query. [Log family engines](https://clickhouse.com/docs/en/engines/table-engines/#log) do not support data changes, so
+in case of `OperationUpdate` or `OperationDelete` operations they will return the next
+error: `Table engine {{table_engine}} doesn't support mutations.`
 
 ### Key Handling
 
 If the `sdk.Record.Key` is empty, it is formed from `sdk.Record.Payload` data by the keys of the `keyColumns` list (for
-update operations only).
+`OperationUpdate` operation only).
 
 ### Table Name
 
