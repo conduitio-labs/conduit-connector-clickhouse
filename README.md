@@ -71,11 +71,6 @@ query. [Log family engines](https://clickhouse.com/docs/en/engines/table-engines
 in case of `OperationUpdate` or `OperationDelete` operations they will return the next
 error: `Table engine {{table_engine}} doesn't support mutations.`
 
-### Key Handling
-
-If the `sdk.Record.Key` is empty, it is formed from `sdk.Record.Payload` data by the keys of the `keyColumns` list (for
-`OperationUpdate` operation only).
-
 ### Table Name
 
 If a record contains a `clickhouse.table` property in its metadata, it will work with this table, otherwise, it will
@@ -88,9 +83,14 @@ connector, as long as the user has proper access to those tables.
 |----------------------|------------------------------------------------------------------------------------|----------|------------------------------------------------|
 | `url`                | [DSN](https://github.com/ClickHouse/clickhouse-go#dsn) to connect to the database. | **true** | `http://username:password@host1:8123/database` |
 | `table`              | Name of the table that the connector should write to.                              | **true** | `table_name`                                   |
-| `keyColumns`         | Comma-separated list of keys for [Key Handling](#key-handling).                    | false    | `id,name`                                      |
+| `keyColumns`         | Comma-separated list of column names for [key handling](#key-handling).            | false    | `id,name`                                      |
 | `sdk.rate.perSecond` | Maximum times the Write function can be called per second (0 means no rate limit). | false    | `200`                                          |
 | `sdk.rate.burst`     | Allow bursts of at most X writes (0 means that bursts are not allowed).            | false    | `10`                                           |
+
+#### Key Handling
+
+If the `sdk.Record.Key` is empty, it is formed from `sdk.Record.Payload` data by the comma-separated `keyColumns` list
+of keys (for update operations only).
 
 ## Known limitations
 
