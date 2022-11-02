@@ -2,8 +2,8 @@
 
 ## General
 
-ClickHouse connector is one of [Conduit](https://github.com/ConduitIO/conduit) plugins. It provides a destination
-ClickHouse connector.
+ClickHouse connector is one of [Conduit](https://github.com/ConduitIO/conduit) plugins. It provides both, a Source and a
+Destination ClickHouse connectors.
 
 Connector uses [Golang SQL database driver](https://github.com/ClickHouse/clickhouse-go) for Yandex ClickHouse.
 
@@ -23,7 +23,10 @@ the environment variables as an `CLICKHOUSE_URL`.
 
 ## Source
 
-The ClickHouse Source allows you to move data from the ClickHouse table to Conduit Destination connectors.
+The ClickHouse Source Connector allows you to move data from the ClickHouse table to Conduit Destination connectors.
+
+It supports all engines of the [MergeTree](https://clickhouse.com/docs/en/engines/table-engines/#mergetree)
+and [Log](https://clickhouse.com/docs/en/engines/table-engines/#log) families.
 
 The iterator selects existing rows from the selected table in batches with ordering and where claus:
 
