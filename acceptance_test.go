@@ -46,10 +46,10 @@ func (d *driver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Recor
 			"clickhouse.table": d.Config.SourceConfig[config.Table],
 		},
 		Key: sdk.StructuredData{
-			"int_type": d.id,
+			"Int32Type": d.id,
 		},
 		Payload: sdk.Change{After: sdk.RawData(
-			fmt.Sprintf(`{"int_type":%d,"string_type":"%s"}`, d.id, uuid.NewString()),
+			fmt.Sprintf(`{"Int32Type":%d,"StringType":"%s"}`, d.id, uuid.NewString()),
 		)},
 	}
 }
@@ -91,8 +91,8 @@ func prepareConfig(t *testing.T) map[string]string {
 	return map[string]string{
 		config.URL:            url,
 		config.Table:          fmt.Sprintf("CONDUIT_TEST_%s", randString(6)),
-		config.KeyColumns:     "int_type",
-		config.OrderingColumn: "int_type",
+		config.KeyColumns:     "Int32Type",
+		config.OrderingColumn: "Int32Type",
 	}
 }
 
@@ -107,9 +107,9 @@ func createTable(url, table string) error {
 	_, err = db.Exec(fmt.Sprintf(`
 	CREATE TABLE %s
 	(
-		int_type Int32,
-		string_type String
-	) ENGINE ReplacingMergeTree() PRIMARY KEY int_type;`, table))
+		Int32Type Int32,
+		StringType String
+	) ENGINE ReplacingMergeTree() PRIMARY KEY Int32Type;`, table))
 	if err != nil {
 		return fmt.Errorf("execute create table query: %w", err)
 	}
