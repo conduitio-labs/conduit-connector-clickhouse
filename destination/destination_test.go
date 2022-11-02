@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	url   = "http://username:password@host1:8123/database"
-	table = "test_table"
+	testURL   = "http://username:password@host1:8123/database"
+	testTable = "test_table"
 )
 
 func TestDestination_Configure_Success(t *testing.T) {
@@ -40,8 +40,8 @@ func TestDestination_Configure_Success(t *testing.T) {
 	d := NewDestination()
 
 	err := d.Configure(context.Background(), map[string]string{
-		config.URL:   url,
-		config.Table: table,
+		config.URL:   testURL,
+		config.Table: testTable,
 	})
 	is.NoErr(err)
 }
@@ -54,7 +54,7 @@ func TestDestination_Configure_Fail(t *testing.T) {
 	d := NewDestination()
 
 	err := d.Configure(context.Background(), map[string]string{
-		config.URL: url,
+		config.URL: testURL,
 	})
 	is.Equal(err.Error(),
 		`parse destination config: parse general config: validate general config: "table" value must be set`)
