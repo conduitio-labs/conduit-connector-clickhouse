@@ -37,8 +37,8 @@ func TestSource_Read_noTable(t *testing.T) {
 	var (
 		is = is.New(t)
 
-		keyColumns     = []string{"string_type"}
-		orderingColumn = "string_type"
+		keyColumns     = []string{"StringType"}
+		orderingColumn = "StringType"
 		cfg            = prepareConfig(t, keyColumns, orderingColumn)
 	)
 
@@ -67,8 +67,8 @@ func TestSource_Read_emptyTable(t *testing.T) {
 	var (
 		is = is.New(t)
 
-		keyColumns     = []string{"string_type"}
-		orderingColumn = "string_type"
+		keyColumns     = []string{"StringType"}
+		orderingColumn = "StringType"
 		cfg            = prepareConfig(t, keyColumns, orderingColumn)
 	)
 
@@ -109,24 +109,24 @@ func TestSource_Read_emptyTable(t *testing.T) {
 
 func TestSource_Read_checkTypes(t *testing.T) {
 	type dataRow struct {
-		IntType         int              `json:"int_type"`
-		StringType      string           `json:"string_type"`
+		IntType         int              `json:"Int32Type"`
+		StringType      string           `json:"StringType"`
 		FloatType       float32          `json:"float_type"`
 		DoubleType      float64          `json:"double_type"`
 		BooleanType     bool             `json:"boolean_type"`
 		UUIDType        uuid.UUID        `json:"uuid_type"`
 		DateType        time.Time        `json:"date_type"`
 		DatetimeType    time.Time        `json:"datetime_type"`
-		ArrayIntType    []int32          `json:"array_int_type"`
-		ArrayStringType []string         `json:"array_string_type"`
+		ArrayIntType    []int32          `json:"array_Int32Type"`
+		ArrayStringType []string         `json:"array_StringType"`
 		MapType         map[string]int32 `json:"map_type"`
 	}
 
 	var (
 		is = is.New(t)
 
-		keyColumns     = []string{"string_type"}
-		orderingColumn = "string_type"
+		keyColumns     = []string{"StringType"}
+		orderingColumn = "StringType"
 		cfg            = prepareConfig(t, keyColumns, orderingColumn)
 	)
 
@@ -216,17 +216,161 @@ func TestSource_Read_checkTypes(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestSource_Read_successCombined(t *testing.T) {
+func TestSource_Read_checkEngines(t *testing.T) {
 	type dataRow struct {
-		IntType    int    `json:"int_type"`
-		StringType string `json:"string_type"`
+		IntType    int    `json:"Int32Type"`
+		StringType string `json:"StringType"`
 	}
 
 	var (
 		is = is.New(t)
 
-		keyColumns     = []string{"string_type"}
-		orderingColumn = "string_type"
+		keyColumns     = []string{"StringType"}
+		orderingColumn = "StringType"
+		cfg            = prepareConfig(t, keyColumns, orderingColumn)
+	)
+
+	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	is.NoErr(err)
+	defer db.Close()
+
+	err = db.Ping()
+	is.NoErr(err)
+
+	tables := map[string]string{
+		fmt.Sprintf("%s_MergeTree", cfg[config.Table]): `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE ReplacingMergeTree() PRIMARY KEY Int32Type;`,
+		fmt.Sprintf("%s_ReplacingMergeTree", cfg[config.Table]): `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE ReplacingMergeTree() PRIMARY KEY Int32Type;`,
+		fmt.Sprintf("%s_SummingMergeTree", cfg[config.Table]): `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE SummingMergeTree() PRIMARY KEY Int32Type;`,
+		fmt.Sprintf("%s_AggregatingMergeTree", cfg[config.Table]): `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE AggregatingMergeTree() PRIMARY KEY Int32Type;`,
+		fmt.Sprintf("%s_CollapsingMergeTree", cfg[config.Table]): `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String,
+				Sign		Int8	DEFAULT 1
+			) ENGINE CollapsingMergeTree(Sign) PRIMARY KEY Int32Type;`,
+		fmt.Sprintf("%s_VersionedCollapsingMergeTree", cfg[config.Table]): `CREATE TABLE %s
+		(
+			Int32Type	Int32,
+			StringType	String,
+			Sign		Int8,
+    		Version		UInt8
+		) ENGINE VersionedCollapsingMergeTree(Sign, Version) PRIMARY KEY Int32Type;`,
+		// add to the etc/clickhouse-server/config.xml next lines:
+		// <graphite_rollup>
+		//   <path_column_name>Path</path_column_name>
+		//   <time_column_name>Time</time_column_name>
+		//   <value_column_name>Value</value_column_name>
+		//   <version_column_name>Version</version_column_name>
+		// </graphite_rollup>
+		fmt.Sprintf("%s_GraphiteMergeTree", cfg[config.Table]): `CREATE TABLE %s
+		(
+			Int32Type	Int32,
+			StringType	String,
+			Path		String,
+			Time		DateTime,
+			Value		Int64,
+			Version		Int32
+		) ENGINE GraphiteMergeTree('graphite_rollup') PRIMARY KEY Int32Type;`,
+		fmt.Sprintf("%s_TinyLog", cfg[config.Table]): `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE TinyLog();`,
+		fmt.Sprintf("%s_StripeLog", cfg[config.Table]): `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE StripeLog();`,
+		fmt.Sprintf("%s_Log", cfg[config.Table]): `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE Log();`,
+	}
+
+	for table, query := range tables {
+		_, err = db.Exec(fmt.Sprintf(query, table))
+		is.NoErr(err)
+	}
+
+	defer func() {
+		for table := range tables {
+			_, err = db.Exec(fmt.Sprintf("DROP TABLE %s", table))
+			is.NoErr(err)
+		}
+	}()
+
+	for table := range tables {
+		cfg[config.Table] = table
+
+		want := dataRow{
+			IntType:    42,
+			StringType: "John",
+		}
+
+		_, err = db.Exec(fmt.Sprintf("INSERT INTO %s (Int32Type, StringType) VALUES (?, ?)", cfg[config.Table]),
+			want.IntType,
+			want.StringType)
+		is.NoErr(err)
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		src := NewSource()
+
+		err = src.Configure(ctx, cfg)
+		is.NoErr(err)
+
+		err = src.Open(ctx, nil)
+		is.NoErr(err)
+
+		record, err := src.Read(ctx)
+		is.NoErr(err)
+
+		is.Equal(record.Position, sdk.Position(fmt.Sprintf(`"%s"`, want.StringType)))
+		is.Equal(record.Operation, sdk.OperationCreate)
+		is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{keyColumns[0]: want.StringType}))
+
+		got := dataRow{}
+		err = json.Unmarshal(record.Payload.After.Bytes(), &got)
+		is.NoErr(err)
+
+		is.Equal(got.IntType, want.IntType)
+		is.Equal(got.StringType, want.StringType)
+
+		cancel()
+
+		err = src.Teardown(context.Background())
+		is.NoErr(err)
+	}
+}
+
+func TestSource_Read_successCombined(t *testing.T) {
+	type dataRow struct {
+		IntType    int    `json:"Int32Type"`
+		StringType string `json:"StringType"`
+	}
+
+	var (
+		is = is.New(t)
+
+		keyColumns     = []string{"StringType"}
+		orderingColumn = "StringType"
 		cfg            = prepareConfig(t, keyColumns, orderingColumn)
 	)
 
@@ -261,7 +405,7 @@ func TestSource_Read_successCombined(t *testing.T) {
 	}
 
 	// insert first two records
-	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s (int_type,string_type) VALUES (?,?),(?,?)", cfg[config.Table]),
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s (Int32Type,StringType) VALUES (?,?),(?,?)", cfg[config.Table]),
 		wants[0].IntType,
 		wants[0].StringType,
 		wants[1].IntType,
@@ -332,7 +476,7 @@ func TestSource_Read_successCombined(t *testing.T) {
 	is.Equal(err, sdk.ErrBackoffRetry)
 
 	// insert the third records
-	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s (int_type,string_type) VALUES (?,?)", cfg[config.Table]),
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s (Int32Type,StringType) VALUES (?,?)", cfg[config.Table]),
 		wants[2].IntType,
 		wants[2].StringType)
 	is.NoErr(err)
@@ -378,18 +522,18 @@ func createTable(db *sqlx.DB, table string) error {
 	_, err := db.Exec(fmt.Sprintf(`
 	CREATE TABLE %s
 	(
-		int_type          Int32,
-		string_type       String,
+		Int32Type          Int32,
+		StringType       String,
 		float_type        Float32,
 		double_type       Float64,
 		boolean_type      Bool,
 		uuid_type         UUID,
 		date_type         Date,
 		datetime_type     DateTime,
-		array_int_type    Array(Int32),
-		array_string_type Array(String),
+		array_Int32Type    Array(Int32),
+		array_StringType Array(String),
 		map_type          Map(String, Int32)
-	) ENGINE ReplacingMergeTree() PRIMARY KEY int_type;`, table))
+	) ENGINE ReplacingMergeTree() PRIMARY KEY Int32Type;`, table))
 	if err != nil {
 		return fmt.Errorf("execute create table query: %w", err)
 	}
