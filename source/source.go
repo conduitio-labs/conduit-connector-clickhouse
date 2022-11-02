@@ -56,34 +56,35 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 		config.URL: {
 			Default:     "",
 			Required:    true,
-			Description: "The connection string to connect to ClickHouse database.",
+			Description: "DSN to connect to the database.",
 		},
 		config.Table: {
 			Default:     "",
 			Required:    true,
-			Description: "The ClickHouse table name that the connector should write to, by default.",
+			Description: "Name of the table that the connector should read.",
 		},
 		config.KeyColumns: {
 			Default:  "",
 			Required: true,
-			Description: "The names of the columns to build the record.Key, separated by commas. " +
-				"The column names are the keys of the record.Key map, and the values are taken from the row.",
+			Description: "Comma-separated list of column names to build the sdk.Record.Key. " +
+				"Column names are the keys of the sdk.Record.Key map, and the values are taken from the row.",
 		},
 		config.OrderingColumn: {
-			Default:     "",
-			Required:    true,
-			Description: "The name of the column that the connector will use for ordering rows.",
+			Default:  "",
+			Required: true,
+			Description: "Column name that the connector will use for ordering rows. Column must contain unique " +
+				"values and suitable for sorting, otherwise the snapshot won't work correctly.",
 		},
 		config.Columns: {
 			Default:  "",
 			Required: false,
-			Description: "The list of column names that should be included in each Record's payload, " +
-				"separated by commas.",
+			Description: "Comma-separated list of column names that should be included in each payload of the " +
+				"sdk.Record. By default includes all columns.",
 		},
 		config.BatchSize: {
 			Default:     "1000",
 			Required:    false,
-			Description: "The size of rows batch",
+			Description: "Size of rows batch. Min is 1 and max is 100000. The default is 1000.",
 		},
 	}
 }
