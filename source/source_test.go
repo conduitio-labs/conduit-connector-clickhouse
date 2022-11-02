@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	url   = "http://username:password@host1:8123/database"
-	table = "test_table"
+	testURL   = "http://username:password@host1:8123/database"
+	testTable = "test_table"
 )
 
 func TestSource_Configure(t *testing.T) {
@@ -37,16 +37,16 @@ func TestSource_Configure(t *testing.T) {
 	s := Source{}
 
 	err := s.Configure(context.Background(), map[string]string{
-		config.URL:            url,
-		config.Table:          table,
+		config.URL:            testURL,
+		config.Table:          testTable,
 		config.KeyColumns:     "id",
 		config.OrderingColumn: "created_at",
 	})
 	is.NoErr(err)
 	is.Equal(s.config, config.Source{
 		Configuration: config.Configuration{
-			URL:   url,
-			Table: table,
+			URL:   testURL,
+			Table: testTable,
 		},
 		KeyColumns:     []string{"id"},
 		OrderingColumn: "created_at",
@@ -60,8 +60,8 @@ func TestSource_Configure_fail(t *testing.T) {
 	s := Source{}
 
 	err := s.Configure(context.Background(), map[string]string{
-		config.URL:        url,
-		config.Table:      table,
+		config.URL:        testURL,
+		config.Table:      testTable,
 		config.KeyColumns: "id",
 	})
 	is.Equal(err.Error(), `parse source config: "orderingColumn" must be set`)
