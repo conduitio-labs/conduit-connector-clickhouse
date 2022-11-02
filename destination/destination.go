@@ -54,19 +54,17 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 		config.URL: {
 			Default:     "",
 			Required:    true,
-			Description: "The connection string to connect to ClickHouse database.",
+			Description: "DSN to connect to the database.",
 		},
 		config.Table: {
 			Default:     "",
 			Required:    true,
-			Description: "The ClickHouse table name that the connector should write to, by default.",
+			Description: "Name of the table that the connector should write to.",
 		},
 		config.KeyColumns: {
-			Default:  "",
-			Required: false,
-			Description: "The list of key column names, separated by commas. " +
-				"If the Record.Key is empty, it is formed from Record.Payload data by the keys of this list " +
-				"(for update operations only).",
+			Default:     "",
+			Required:    false,
+			Description: "Comma-separated list of column names for key handling. ",
 		},
 	}
 }
