@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	url   = "http://username:password@host1:8123/database"
-	table = "test_table"
+	testURL   = "http://username:password@host1:8123/database"
+	testTable = "test_table"
 )
 
 func TestParseGeneral(t *testing.T) {
@@ -39,25 +39,25 @@ func TestParseGeneral(t *testing.T) {
 		{
 			name: "valid config",
 			in: map[string]string{
-				URL:   url,
-				Table: table,
+				URL:   testURL,
+				Table: testTable,
 			},
 			want: configuration{
-				URL:   url,
-				Table: table,
+				URL:   testURL,
+				Table: testTable,
 			},
 		},
 		{
 			name: "url is required",
 			in: map[string]string{
-				Table: table,
+				Table: testTable,
 			},
 			err: fmt.Errorf("validate general config: %w", errRequired(URL)),
 		},
 		{
 			name: "table is required",
 			in: map[string]string{
-				URL: url,
+				URL: testURL,
 			},
 			err: fmt.Errorf("validate general config: %w", errRequired(Table)),
 		},

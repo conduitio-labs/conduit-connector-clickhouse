@@ -31,14 +31,14 @@ func TestParseDestination(t *testing.T) {
 		{
 			name: "valid config with keyColumns field",
 			in: map[string]string{
-				URL:        url,
-				Table:      table,
+				URL:        testURL,
+				Table:      testTable,
 				KeyColumns: "id",
 			},
 			want: Destination{
 				configuration: configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				KeyColumns: []string{"id"},
 			},
@@ -46,14 +46,14 @@ func TestParseDestination(t *testing.T) {
 		{
 			name: "valid config with keyColumns fields",
 			in: map[string]string{
-				URL:        url,
-				Table:      table,
+				URL:        testURL,
+				Table:      testTable,
 				KeyColumns: "id ,name , ,  ,,",
 			},
 			want: Destination{
 				configuration: configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				KeyColumns: []string{"id", "name"},
 			},
