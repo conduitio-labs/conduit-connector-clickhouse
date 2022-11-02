@@ -32,15 +32,15 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_required_values",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id,name",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id", "name"},
@@ -50,16 +50,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_batchSize",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id,name",
 				BatchSize:      "100",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				KeyColumns:     []string{"id", "name"},
 				OrderingColumn: "id",
@@ -69,16 +69,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_batchSize_max",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "100000",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -88,16 +88,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_batchSize_min",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "1",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -107,16 +107,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_columns_has_one_key",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        "id",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -127,16 +127,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_columns_has_one_key",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        "id,name",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -147,16 +147,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_columns_space_between_keys",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        "id, name",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -167,16 +167,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_columns_ends_with_space",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        "id,name ",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -187,16 +187,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_columns_starts_with_space",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        " id,name",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -207,16 +207,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_columns_space_between_keys_before_comma",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        "id ,name",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -227,16 +227,16 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "success_columns_two_spaces",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        "id,  name",
 			},
 			want: Source{
 				Configuration: Configuration{
-					URL:   url,
-					Table: table,
+					URL:   testURL,
+					Table: testTable,
 				},
 				OrderingColumn: "id",
 				KeyColumns:     []string{"id"},
@@ -247,8 +247,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_required_orderingColumn",
 			in: map[string]string{
-				URL:        url,
-				Table:      table,
+				URL:        testURL,
+				Table:      testTable,
 				KeyColumns: "id",
 				Columns:    "id,name,age",
 			},
@@ -257,8 +257,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_required_keyColumns",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				Columns:        "id,name,age",
 				OrderingColumn: "id",
 			},
@@ -267,8 +267,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_invalid_batchSize",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "a",
@@ -278,8 +278,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_missed_orderingColumn_in_columns",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "name",
 				Columns:        "name,age",
@@ -289,8 +289,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_missed_keyColumn_in_columns",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "name",
 				Columns:        "id,age",
@@ -300,8 +300,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_invalid_keyColumns",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     ",",
 				Columns:        "id,age",
@@ -311,8 +311,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_batchSize_is_too_big",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "100001",
@@ -322,8 +322,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_batchSize_is_zero",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "0",
@@ -333,8 +333,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_batchSize_is_negative",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				BatchSize:      "-1",
@@ -344,8 +344,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_columns_ends_with_comma",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        "id,name,",
@@ -355,8 +355,8 @@ func TestParseSource(t *testing.T) {
 		{
 			name: "failure_columns_starts_with_comma",
 			in: map[string]string{
-				URL:            url,
-				Table:          table,
+				URL:            testURL,
+				Table:          testTable,
 				OrderingColumn: "id",
 				KeyColumns:     "id",
 				Columns:        ",id,name",
