@@ -41,7 +41,7 @@ func TestDestination_Write(t *testing.T) {
 		uuidType        uuid.UUID
 		dateType        time.Time
 		datetimeType    time.Time
-		arrayIntType    []int32
+		arrayInt32Type  []int32
 		arrayStringType []string
 		mapType         map[string]int32
 	}
@@ -87,7 +87,7 @@ func TestDestination_Write(t *testing.T) {
 		uuidType:        uuid.New(),
 		dateType:        time.Date(2009, 11, 10, 0, 0, 0, 0, time.UTC),
 		datetimeType:    time.Date(2009, 11, 10, 23, 0, 0, 0, time.UTC),
-		arrayIntType:    []int32{10, 20, 30},
+		arrayInt32Type:  []int32{10, 20, 30},
 		arrayStringType: []string{"test_a", "test_b", "test_c"},
 		mapType: map[string]int32{
 			"test1": 1,
@@ -98,17 +98,17 @@ func TestDestination_Write(t *testing.T) {
 	record := sdk.Record{
 		Operation: sdk.OperationSnapshot,
 		Payload: sdk.Change{After: sdk.StructuredData{
-			"int_type":          want.intType,
-			"string_type":       want.stringType,
-			"float_type":        want.floatType,
-			"double_type":       want.doubleType,
-			"boolean_type":      want.booleanType,
-			"uuid_type":         want.uuidType,
-			"date_type":         want.dateType,
-			"datetime_type":     want.datetimeType,
-			"array_int_type":    want.arrayIntType,
-			"array_string_type": want.arrayStringType,
-			"map_type":          want.mapType,
+			"Int32Type":       want.intType,
+			"StringType":      want.stringType,
+			"FloatType":       want.floatType,
+			"DoubleType":      want.doubleType,
+			"BooleanType":     want.booleanType,
+			"UUIDType":        want.uuidType,
+			"DateType":        want.dateType,
+			"DatetimeType":    want.datetimeType,
+			"ArrayInt32Type":  want.arrayInt32Type,
+			"ArrayStringType": want.arrayStringType,
+			"MapType":         want.mapType,
 		}},
 	}
 
@@ -125,7 +125,7 @@ func TestDestination_Write(t *testing.T) {
 	time.Sleep(time.Second)
 
 	res := dataRow{}
-	err = db.QueryRow(fmt.Sprintf("SELECT * FROM %s WHERE int_type = %d;", cfg[config.Table], 42)).
+	err = db.QueryRow(fmt.Sprintf("SELECT * FROM %s WHERE Int32Type = %d;", cfg[config.Table], 42)).
 		Scan(&res.intType,
 			&res.stringType,
 			&res.floatType,
@@ -134,7 +134,7 @@ func TestDestination_Write(t *testing.T) {
 			&res.uuidType,
 			&res.dateType,
 			&res.datetimeType,
-			&res.arrayIntType,
+			&res.arrayInt32Type,
 			&res.arrayStringType,
 			&res.mapType)
 	is.NoErr(err)
@@ -174,7 +174,7 @@ func TestDestination_Write_Update(t *testing.T) {
 	defer cancel()
 
 	// set a KeyColumns field to the config
-	cfg[config.KeyColumns] = "int_type"
+	cfg[config.KeyColumns] = "Int32Type"
 
 	dest := NewDestination()
 
@@ -188,11 +188,11 @@ func TestDestination_Write_Update(t *testing.T) {
 		{
 			Operation: sdk.OperationUpdate,
 			Key: sdk.StructuredData{
-				"int_type": 42,
+				"Int32Type": 42,
 			},
 			Payload: sdk.Change{After: sdk.StructuredData{
-				"int_type":    42,
-				"string_type": "Jane",
+				"Int32Type":  42,
+				"StringType": "Jane",
 			}},
 		},
 	})
@@ -208,8 +208,8 @@ func TestDestination_Write_Update(t *testing.T) {
 		{
 			Operation: sdk.OperationUpdate,
 			Payload: sdk.Change{After: sdk.StructuredData{
-				"int_type":    42,
-				"string_type": "Sam",
+				"Int32Type":  42,
+				"StringType": "Sam",
 			}},
 		},
 	})
@@ -269,7 +269,7 @@ func TestDestination_Write_Delete(t *testing.T) {
 	n, err := dest.Write(ctx, []sdk.Record{
 		{
 			Operation: sdk.OperationDelete,
-			Key:       sdk.RawData(`{"int_type":42}`),
+			Key:       sdk.RawData(`{"Int32Type":42}`),
 		},
 	})
 	is.NoErr(err)
@@ -321,7 +321,7 @@ func TestDestination_Write_WrongColumn(t *testing.T) {
 		{
 			Operation: sdk.OperationSnapshot,
 			Payload: sdk.Change{After: sdk.StructuredData{
-				"int_type":     43,
+				"Int32Type":    43,
 				"wrong_column": "test",
 			}},
 		},
@@ -351,19 +351,19 @@ func prepareConfig(t *testing.T) map[string]string {
 func createTable(db *sqlx.DB, table string) error {
 	_, err := db.Exec(fmt.Sprintf(`
 	CREATE TABLE %s
-(
-    int_type          Int32,
-    string_type       String,
-    float_type        Float32,
-	double_type       Float64,
-	boolean_type      Bool,
-	uuid_type         UUID,
-	date_type         Date,
-	datetime_type     DateTime,
-	array_int_type    Array(Int32),
-	array_string_type Array(String),
-    map_type          Map(String, Int32)
-) ENGINE ReplacingMergeTree() PRIMARY KEY int_type;`, table))
+	(
+		Int32Type		Int32,
+		StringType		String,
+		FloatType		Float32,
+		DoubleType		Float64,
+		BooleanType		Bool,
+		UUIDType		UUID,
+		DateType		Date,
+		DatetimeType	DateTime,
+		ArrayInt32Type	Array(Int32),
+		ArrayStringType	Array(String),
+		MapType			Map(String, Int32)
+	) ENGINE ReplacingMergeTree() PRIMARY KEY Int32Type;`, table))
 	if err != nil {
 		return fmt.Errorf("execute create table query: %w", err)
 	}
@@ -381,7 +381,7 @@ func dropTable(db *sqlx.DB, table string) error {
 }
 
 func insertData(db *sqlx.DB, table string) error {
-	_, err := db.Exec(fmt.Sprintf("INSERT INTO %s (int_type, string_type) VALUES (42, 'Sam');", table))
+	_, err := db.Exec(fmt.Sprintf("INSERT INTO %s (Int32Type, StringType) VALUES (42, 'Sam');", table))
 	if err != nil {
 		return fmt.Errorf("execute insert query: %w", err)
 	}
@@ -393,7 +393,7 @@ func getStringFieldByIntField(db *sqlx.DB, table string, id int) (string, error)
 	// wait a bit
 	time.Sleep(time.Second)
 
-	row := db.QueryRow(fmt.Sprintf("SELECT string_type FROM %s WHERE int_type = %d;", table, id))
+	row := db.QueryRow(fmt.Sprintf("SELECT StringType FROM %s WHERE Int32Type = %d;", table, id))
 
 	name := ""
 
