@@ -407,7 +407,7 @@ func TestDestination_Write_successCheckEngines(t *testing.T) {
 		) ENGINE VersionedCollapsingMergeTree(Sign, Version) PRIMARY KEY Int32Type;`,
 			supportMutations: true,
 		},
-		// add to the etc/clickhouse-server/config.xml next lines:
+		// to run this test case add to the clickhouse server config next lines:
 		// <graphite_rollup>
 		//   <path_column_name>Path</path_column_name>
 		//   <time_column_name>Time</time_column_name>
