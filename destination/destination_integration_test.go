@@ -32,7 +32,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 )
 
-func TestDestination_Write(t *testing.T) {
+func TestDestination_Write_successInsert(t *testing.T) {
 	type dataRow struct {
 		intType         int
 		stringType      string
@@ -146,7 +146,7 @@ func TestDestination_Write(t *testing.T) {
 	is.Equal(res, want)
 }
 
-func TestDestination_Write_Update(t *testing.T) {
+func TestDestination_Write_successUpdate(t *testing.T) {
 	var (
 		ctx = context.Background()
 		cfg = prepareConfig(t)
@@ -227,7 +227,7 @@ func TestDestination_Write_Update(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestDestination_Write_Delete(t *testing.T) {
+func TestDestination_Write_successDelete(t *testing.T) {
 	var (
 		ctx = context.Background()
 		cfg = prepareConfig(t)
@@ -285,7 +285,7 @@ func TestDestination_Write_Delete(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestDestination_Write_WrongColumn(t *testing.T) {
+func TestDestination_Write_failedWrongColumn(t *testing.T) {
 	var (
 		ctx = context.Background()
 		cfg = prepareConfig(t)
@@ -333,6 +333,241 @@ func TestDestination_Write_WrongColumn(t *testing.T) {
 
 	err = dest.Teardown(context.Background())
 	is.NoErr(err)
+}
+
+func TestDestination_Write_successCheckEngines(t *testing.T) {
+	var (
+		ctx = context.Background()
+		cfg = prepareConfig(t)
+		is  = is.New(t)
+	)
+
+	tests := []struct {
+		name             string
+		table            string
+		createQuery      string
+		supportMutations bool
+		mutationErrMsg   string
+	}{
+		{
+			name:  "merge_tree",
+			table: fmt.Sprintf("%s_MergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE MergeTree() PRIMARY KEY Int32Type;`,
+			supportMutations: true,
+		}, {
+			name:  "replacing_merge_tree",
+			table: fmt.Sprintf("%s_ReplacingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE ReplacingMergeTree() PRIMARY KEY Int32Type;`,
+			supportMutations: true,
+		}, {
+			name:  "summing_merge_tree",
+			table: fmt.Sprintf("%s_SummingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE SummingMergeTree() PRIMARY KEY Int32Type;`,
+			supportMutations: true,
+		}, {
+			name:  "aggregating_merge_tree",
+			table: fmt.Sprintf("%s_AggregatingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE AggregatingMergeTree() PRIMARY KEY Int32Type;`,
+			supportMutations: true,
+		}, {
+			name:  "collapsing_merge_tree",
+			table: fmt.Sprintf("%s_CollapsingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String,
+				Sign		Int8	DEFAULT 1
+			) ENGINE CollapsingMergeTree(Sign) PRIMARY KEY Int32Type;`,
+			supportMutations: true,
+		}, {
+			name:  "versioned_collapsing_merge_tree",
+			table: fmt.Sprintf("%s_VersionedCollapsingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+		(
+			Int32Type	Int32,
+			StringType	String,
+			Sign		Int8,
+    		Version		UInt8
+		) ENGINE VersionedCollapsingMergeTree(Sign, Version) PRIMARY KEY Int32Type;`,
+			supportMutations: true,
+		},
+		// to run this test case add to the clickhouse server config next lines:
+		// <graphite_rollup>
+		//   <path_column_name>Path</path_column_name>
+		//   <time_column_name>Time</time_column_name>
+		//   <value_column_name>Value</value_column_name>
+		//   <version_column_name>Version</version_column_name>
+		// </graphite_rollup>
+		{
+			name:  "graphite_merge_tree",
+			table: fmt.Sprintf("%s_GraphiteMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+		(
+			Int32Type	Int32,
+			StringType	String,
+			Path		String,
+			Time		DateTime,
+			Value		Int64,
+			Version		Int32
+		) ENGINE GraphiteMergeTree('graphite_rollup') PRIMARY KEY Int32Type;`,
+			supportMutations: true,
+		},
+		{
+			name:  "tiny_log",
+			table: fmt.Sprintf("%s_TinyLog", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE TinyLog();`,
+			supportMutations: false,
+			mutationErrMsg:   "Table engine TinyLog doesn't support mutations",
+		},
+		{
+			name:  "stripe_log",
+			table: fmt.Sprintf("%s_StripeLog", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE StripeLog();`,
+			supportMutations: false,
+			mutationErrMsg:   "Table engine StripeLog doesn't support mutations",
+		},
+		{
+			name:  "log",
+			table: fmt.Sprintf("%s_Log", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE Log();`,
+			supportMutations: false,
+			mutationErrMsg:   "Table engine Log doesn't support mutations",
+		},
+	}
+
+	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	is.NoErr(err)
+	defer db.Close()
+
+	err = db.Ping()
+	is.NoErr(err)
+
+	for i := range tests {
+		_, err = db.Exec(fmt.Sprintf(tests[i].createQuery, tests[i].table))
+		is.NoErr(err)
+	}
+
+	defer func() {
+		for i := range tests {
+			err = dropTable(db, tests[i].table)
+			is.NoErr(err)
+		}
+	}()
+
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			cfg[config.Table] = tt.table
+
+			cctx, cancel := context.WithCancel(ctx)
+
+			dest := NewDestination()
+
+			err = dest.Configure(cctx, cfg)
+			is.NoErr(err)
+
+			err = dest.Open(cctx)
+			is.NoErr(err)
+
+			// OperationCreate
+			n, err := dest.Write(cctx, []sdk.Record{
+				{
+					Operation: sdk.OperationCreate,
+					Key: sdk.StructuredData{
+						"Int32Type": 42,
+					},
+					Payload: sdk.Change{After: sdk.StructuredData{
+						"Int32Type":  42,
+						"StringType": "Jane",
+					}},
+				},
+			})
+			is.NoErr(err)
+			is.Equal(n, 1)
+
+			name, err := getStringFieldByIntField(db, cfg[config.Table], 42)
+			is.NoErr(err)
+			is.Equal(name, "Jane")
+
+			// OperationUpdate
+			n, err = dest.Write(cctx, []sdk.Record{
+				{
+					Operation: sdk.OperationUpdate,
+					Key: sdk.StructuredData{
+						"Int32Type": 42,
+					},
+					Payload: sdk.Change{After: sdk.StructuredData{
+						"Int32Type":  42,
+						"StringType": "Sam",
+					}},
+				},
+			})
+			if tt.supportMutations {
+				is.NoErr(err)
+				is.Equal(n, 1)
+
+				name, err = getStringFieldByIntField(db, cfg[config.Table], 42)
+				is.NoErr(err)
+				is.Equal(name, "Sam")
+			} else {
+				is.True(strings.Contains(err.Error(), tt.mutationErrMsg))
+				is.Equal(n, 0)
+			}
+
+			// OperationDelete
+			n, err = dest.Write(cctx, []sdk.Record{
+				{
+					Operation: sdk.OperationDelete,
+					Key:       sdk.RawData(`{"Int32Type":42}`),
+				},
+			})
+			if tt.supportMutations {
+				is.NoErr(err)
+				is.Equal(n, 1)
+
+				name, err = getStringFieldByIntField(db, cfg[config.Table], 42)
+				is.True(err != nil)
+				is.Equal(name, "")
+			} else {
+				is.True(strings.Contains(err.Error(), tt.mutationErrMsg))
+				is.Equal(n, 0)
+			}
+
+			cancel()
+
+			err = dest.Teardown(context.Background())
+			is.NoErr(err)
+		})
+	}
 }
 
 func prepareConfig(t *testing.T) map[string]string {
