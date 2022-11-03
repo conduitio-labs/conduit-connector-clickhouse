@@ -83,7 +83,7 @@ func TestSource_Read_emptyTable(t *testing.T) {
 	is.NoErr(err)
 
 	defer func() {
-		err = dropTables(db, cfg[config.Table])
+		err = dropTable(db, cfg[config.Table])
 		is.NoErr(err)
 	}()
 
@@ -141,7 +141,7 @@ func TestSource_Read_checkTypes(t *testing.T) {
 	is.NoErr(err)
 
 	defer func() {
-		err = dropTables(db, cfg[config.Table])
+		err = dropTable(db, cfg[config.Table])
 		is.NoErr(err)
 	}()
 
@@ -230,55 +230,74 @@ func TestSource_Read_checkEngines(t *testing.T) {
 		cfg            = prepareConfig(t, keyColumns, orderingColumn)
 	)
 
-	db, err := sqlx.Open("clickhouse", cfg[config.URL])
-	is.NoErr(err)
-	defer db.Close()
-
-	err = db.Ping()
-	is.NoErr(err)
-
-	tables := map[string]string{
-		fmt.Sprintf("%s_MergeTree", cfg[config.Table]): `CREATE TABLE %s
+	tests := []struct {
+		name        string
+		table       string
+		createQuery string
+	}{
+		{
+			name:  "merge_tree",
+			table: fmt.Sprintf("%s_MergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
+			(
+				Int32Type	Int32,
+				StringType	String
+			) ENGINE MergeTree() PRIMARY KEY Int32Type;`,
+		}, {
+			name:  "replacing_merge_tree",
+			table: fmt.Sprintf("%s_ReplacingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
 			(
 				Int32Type	Int32,
 				StringType	String
 			) ENGINE ReplacingMergeTree() PRIMARY KEY Int32Type;`,
-		fmt.Sprintf("%s_ReplacingMergeTree", cfg[config.Table]): `CREATE TABLE %s
-			(
-				Int32Type	Int32,
-				StringType	String
-			) ENGINE ReplacingMergeTree() PRIMARY KEY Int32Type;`,
-		fmt.Sprintf("%s_SummingMergeTree", cfg[config.Table]): `CREATE TABLE %s
+		}, {
+			name:  "summing_merge_tree",
+			table: fmt.Sprintf("%s_SummingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
 			(
 				Int32Type	Int32,
 				StringType	String
 			) ENGINE SummingMergeTree() PRIMARY KEY Int32Type;`,
-		fmt.Sprintf("%s_AggregatingMergeTree", cfg[config.Table]): `CREATE TABLE %s
+		}, {
+			name:  "aggregating_merge_tree",
+			table: fmt.Sprintf("%s_AggregatingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
 			(
 				Int32Type	Int32,
 				StringType	String
 			) ENGINE AggregatingMergeTree() PRIMARY KEY Int32Type;`,
-		fmt.Sprintf("%s_CollapsingMergeTree", cfg[config.Table]): `CREATE TABLE %s
+		}, {
+			name:  "collapsing_merge_tree",
+			table: fmt.Sprintf("%s_CollapsingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
 			(
 				Int32Type	Int32,
 				StringType	String,
 				Sign		Int8	DEFAULT 1
 			) ENGINE CollapsingMergeTree(Sign) PRIMARY KEY Int32Type;`,
-		fmt.Sprintf("%s_VersionedCollapsingMergeTree", cfg[config.Table]): `CREATE TABLE %s
+		}, {
+			name:  "versioned_collapsing_merge_tree",
+			table: fmt.Sprintf("%s_VersionedCollapsingMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
 		(
 			Int32Type	Int32,
 			StringType	String,
 			Sign		Int8,
     		Version		UInt8
 		) ENGINE VersionedCollapsingMergeTree(Sign, Version) PRIMARY KEY Int32Type;`,
-		// add to the etc/clickhouse-server/config.xml next lines:
+		},
+		// to run this test case add to the clickhouse server config next lines:
 		// <graphite_rollup>
 		//   <path_column_name>Path</path_column_name>
 		//   <time_column_name>Time</time_column_name>
 		//   <value_column_name>Value</value_column_name>
 		//   <version_column_name>Version</version_column_name>
 		// </graphite_rollup>
-		fmt.Sprintf("%s_GraphiteMergeTree", cfg[config.Table]): `CREATE TABLE %s
+		{
+			name:  "graphite_merge_tree",
+			table: fmt.Sprintf("%s_GraphiteMergeTree", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
 		(
 			Int32Type	Int32,
 			StringType	String,
@@ -287,76 +306,100 @@ func TestSource_Read_checkEngines(t *testing.T) {
 			Value		Int64,
 			Version		Int32
 		) ENGINE GraphiteMergeTree('graphite_rollup') PRIMARY KEY Int32Type;`,
-		fmt.Sprintf("%s_TinyLog", cfg[config.Table]): `CREATE TABLE %s
+		},
+		{
+			name:  "tiny_log",
+			table: fmt.Sprintf("%s_TinyLog", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
 			(
 				Int32Type	Int32,
 				StringType	String
 			) ENGINE TinyLog();`,
-		fmt.Sprintf("%s_StripeLog", cfg[config.Table]): `CREATE TABLE %s
+		},
+		{
+			name:  "stripe_log",
+			table: fmt.Sprintf("%s_StripeLog", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
 			(
 				Int32Type	Int32,
 				StringType	String
 			) ENGINE StripeLog();`,
-		fmt.Sprintf("%s_Log", cfg[config.Table]): `CREATE TABLE %s
+		},
+		{
+			name:  "log",
+			table: fmt.Sprintf("%s_Log", cfg[config.Table]),
+			createQuery: `CREATE TABLE %s
 			(
 				Int32Type	Int32,
 				StringType	String
 			) ENGINE Log();`,
+		},
 	}
 
-	for table, query := range tables {
-		_, err = db.Exec(fmt.Sprintf(query, table))
+	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	is.NoErr(err)
+	defer db.Close()
+
+	err = db.Ping()
+	is.NoErr(err)
+
+	for i := range tests {
+		_, err = db.Exec(fmt.Sprintf(tests[i].createQuery, tests[i].table))
 		is.NoErr(err)
 	}
 
 	defer func() {
-		for table := range tables {
-			_, err = db.Exec(fmt.Sprintf("DROP TABLE %s", table))
+		for i := range tests {
+			err = dropTable(db, tests[i].table)
 			is.NoErr(err)
 		}
 	}()
 
-	for table := range tables {
-		cfg[config.Table] = table
+	for _, tt := range tests {
+		tt := tt
 
-		want := dataRow{
-			IntType:    42,
-			StringType: "John",
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			cfg[config.Table] = tt.table
 
-		_, err = db.Exec(fmt.Sprintf("INSERT INTO %s (Int32Type, StringType) VALUES (?, ?)", cfg[config.Table]),
-			want.IntType,
-			want.StringType)
-		is.NoErr(err)
+			want := dataRow{
+				IntType:    42,
+				StringType: "John",
+			}
 
-		ctx, cancel := context.WithCancel(context.Background())
+			_, err = db.Exec(fmt.Sprintf("INSERT INTO %s (Int32Type, StringType) VALUES (?, ?)", cfg[config.Table]),
+				want.IntType,
+				want.StringType)
+			is.NoErr(err)
 
-		src := NewSource()
+			ctx, cancel := context.WithCancel(context.Background())
 
-		err = src.Configure(ctx, cfg)
-		is.NoErr(err)
+			src := NewSource()
 
-		err = src.Open(ctx, nil)
-		is.NoErr(err)
+			err = src.Configure(ctx, cfg)
+			is.NoErr(err)
 
-		record, err := src.Read(ctx)
-		is.NoErr(err)
+			err = src.Open(ctx, nil)
+			is.NoErr(err)
 
-		is.Equal(record.Position, sdk.Position(fmt.Sprintf(`"%s"`, want.StringType)))
-		is.Equal(record.Operation, sdk.OperationCreate)
-		is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{keyColumns[0]: want.StringType}))
+			record, err := src.Read(ctx)
+			is.NoErr(err)
 
-		got := dataRow{}
-		err = json.Unmarshal(record.Payload.After.Bytes(), &got)
-		is.NoErr(err)
+			is.Equal(record.Position, sdk.Position(fmt.Sprintf(`"%s"`, want.StringType)))
+			is.Equal(record.Operation, sdk.OperationCreate)
+			is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{keyColumns[0]: want.StringType}))
 
-		is.Equal(got.IntType, want.IntType)
-		is.Equal(got.StringType, want.StringType)
+			got := dataRow{}
+			err = json.Unmarshal(record.Payload.After.Bytes(), &got)
+			is.NoErr(err)
 
-		cancel()
+			is.Equal(got.IntType, want.IntType)
+			is.Equal(got.StringType, want.StringType)
 
-		err = src.Teardown(context.Background())
-		is.NoErr(err)
+			cancel()
+
+			err = src.Teardown(context.Background())
+			is.NoErr(err)
+		})
 	}
 }
 
@@ -385,7 +428,7 @@ func TestSource_Read_successCombined(t *testing.T) {
 	is.NoErr(err)
 
 	defer func() {
-		err = dropTables(db, cfg[config.Table])
+		err = dropTable(db, cfg[config.Table])
 		is.NoErr(err)
 	}()
 
@@ -541,7 +584,7 @@ func createTable(db *sqlx.DB, table string) error {
 	return nil
 }
 
-func dropTables(db *sqlx.DB, table string) error {
+func dropTable(db *sqlx.DB, table string) error {
 	_, err := db.Exec(fmt.Sprintf("DROP TABLE %s", table))
 	if err != nil {
 		return fmt.Errorf("execute drop table query: %w", err)
