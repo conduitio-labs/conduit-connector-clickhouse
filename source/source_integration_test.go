@@ -33,7 +33,7 @@ import (
 	"github.com/matryer/is"
 )
 
-func TestSource_Read_noTable(t *testing.T) {
+func TestSource_noTable(t *testing.T) {
 	var (
 		is = is.New(t)
 
@@ -58,12 +58,12 @@ func TestSource_Read_noTable(t *testing.T) {
 	is.NoErr(err)
 
 	err = src.Open(ctx, nil)
-	is.True(strings.Contains(err.Error(), "new iterator: load rows: execute select query"))
+	is.True(strings.Contains(err.Error(), "load rows: execute select query"))
 
 	cancel()
 }
 
-func TestSource_Read_emptyTable(t *testing.T) {
+func TestSource_emptyTable(t *testing.T) {
 	var (
 		is = is.New(t)
 
@@ -107,7 +107,7 @@ func TestSource_Read_emptyTable(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestSource_Read_checkTypes(t *testing.T) {
+func TestSource_checkTypes(t *testing.T) {
 	type dataRow struct {
 		IntType         int              `json:"Int32Type"`
 		StringType      string           `json:"StringType"`
@@ -216,7 +216,7 @@ func TestSource_Read_checkTypes(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestSource_Read_checkEngines(t *testing.T) {
+func TestSource_checkEngines(t *testing.T) {
 	type dataRow struct {
 		IntType    int    `json:"Int32Type"`
 		StringType string `json:"StringType"`
@@ -403,7 +403,7 @@ func TestSource_Read_checkEngines(t *testing.T) {
 	}
 }
 
-func TestSource_Read_successCombined(t *testing.T) {
+func TestSource_successCombined(t *testing.T) {
 	type dataRow struct {
 		IntType    int    `json:"Int32Type"`
 		StringType string `json:"StringType"`
@@ -466,7 +466,7 @@ func TestSource_Read_successCombined(t *testing.T) {
 	err = src.Open(ctx, nil)
 	is.NoErr(err)
 
-	// call Read (will return the first record)
+	// call Read (must return the first record)
 	record, err := src.Read(ctx)
 	is.NoErr(err)
 
@@ -499,7 +499,7 @@ func TestSource_Read_successCombined(t *testing.T) {
 	err = src.Open(ctx, record.Position)
 	is.NoErr(err)
 
-	// call Read (will return the second record)
+	// call Read (must return the second record)
 	record, err = src.Read(ctx)
 	is.NoErr(err)
 
@@ -514,7 +514,7 @@ func TestSource_Read_successCombined(t *testing.T) {
 	is.Equal(got.IntType, wants[1].IntType)
 	is.Equal(got.StringType, wants[1].StringType)
 
-	// call Read (will not return the record)
+	// call Read (must return the sdk.ErrBackoffRetry error)
 	_, err = src.Read(ctx)
 	is.Equal(err, sdk.ErrBackoffRetry)
 
@@ -524,7 +524,7 @@ func TestSource_Read_successCombined(t *testing.T) {
 		wants[2].StringType)
 	is.NoErr(err)
 
-	// call Read (will return the second record)
+	// call Read (must return the second record)
 	record, err = src.Read(ctx)
 	is.NoErr(err)
 

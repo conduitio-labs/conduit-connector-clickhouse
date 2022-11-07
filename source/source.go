@@ -18,9 +18,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
-	"github.com/conduitio-labs/conduit-connector-clickhouse/source/iterator"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/multierr"
@@ -29,20 +30,24 @@ import (
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 )
 
-// Iterator interface.
-type Iterator interface {
-	HasNext(context.Context) (bool, error)
-	Next(context.Context) (sdk.Record, error)
-	Stop() error
-}
+// metadata related.
+const (
+	metadataTable = "clickhouse.table"
+
+	querySelectRowsFmt = "SELECT %s FROM %s%s ORDER BY %s ASC LIMIT %d;"
+	whereClauseFmt     = " WHERE %s > ?"
+)
 
 // Source is a ClickHouse source plugin.
 type Source struct {
 	sdk.UnimplementedSource
 
-	config   config.Source
-	db       *sqlx.DB
-	iterator Iterator
+	config config.Source
+	db     *sqlx.DB
+	rows   *sqlx.Rows
+
+	// last processed orderingColumn value
+	lastProcessedVal any
 }
 
 // NewSource initialises a new source.
@@ -108,10 +113,8 @@ func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error 
 func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 	sdk.Logger(ctx).Info().Msg("Opening a ClickHouse Source...")
 
-	var lastProcessedVal any
-
 	if position != nil {
-		if err := json.Unmarshal(position, &lastProcessedVal); err != nil {
+		if err := json.Unmarshal(position, &s.lastProcessedVal); err != nil {
 			return fmt.Errorf("unmarshal sdk.Position into Position: %w", err)
 		}
 	}
@@ -128,17 +131,9 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 
 	s.db = db
 
-	s.iterator, err = iterator.New(ctx, iterator.Params{
-		DB:               db,
-		LastProcessedVal: lastProcessedVal,
-		Table:            s.config.Table,
-		KeyColumns:       s.config.KeyColumns,
-		OrderingColumn:   s.config.OrderingColumn,
-		Columns:          s.config.Columns,
-		BatchSize:        s.config.BatchSize,
-	})
+	err = s.loadRows(ctx)
 	if err != nil {
-		return fmt.Errorf("new iterator: %w", err)
+		return fmt.Errorf("load rows: %w", err)
 	}
 
 	return nil
@@ -148,7 +143,7 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 	sdk.Logger(ctx).Debug().Msg("Reading a record from ClickHouse Source...")
 
-	hasNext, err := s.iterator.HasNext(ctx)
+	hasNext, err := s.hasNext(ctx)
 	if err != nil {
 		return sdk.Record{}, fmt.Errorf("has next: %w", err)
 	}
@@ -157,12 +152,52 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 		return sdk.Record{}, sdk.ErrBackoffRetry
 	}
 
-	record, err := s.iterator.Next(ctx)
+	row := make(map[string]any)
+
+	err = s.rows.MapScan(row)
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("next: %w", err)
+		return sdk.Record{}, fmt.Errorf("scan rows: %w", err)
 	}
 
-	return record, nil
+	if _, ok := row[s.config.OrderingColumn]; !ok {
+		return sdk.Record{}, fmt.Errorf("ordering column %q not found", s.config.OrderingColumn)
+	}
+
+	key := make(sdk.StructuredData)
+	for i := range s.config.KeyColumns {
+		val, ok := row[s.config.KeyColumns[i]]
+		if !ok {
+			return sdk.Record{}, fmt.Errorf("key column %q not found", s.config.KeyColumns[i])
+		}
+
+		key[s.config.KeyColumns[i]] = val
+	}
+
+	rowBytes, err := json.Marshal(row)
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("marshal row: %w", err)
+	}
+
+	// set a new position into the variable,
+	// to avoid saving position into the struct until we marshal the position
+	positionBytes, err := json.Marshal(row[s.config.OrderingColumn])
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("marshal position: %w", err)
+	}
+
+	s.lastProcessedVal = row[s.config.OrderingColumn]
+
+	metadata := sdk.Metadata{
+		metadataTable: s.config.Table,
+	}
+	metadata.SetCreatedAt(time.Now())
+
+	return sdk.Util.Source.NewRecordCreate(
+		positionBytes,
+		metadata,
+		key,
+		sdk.RawData(rowBytes),
+	), nil
 }
 
 // Ack appends the last processed value to the slice to clear the tracking table in the future.
@@ -176,8 +211,8 @@ func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
 func (s *Source) Teardown(ctx context.Context) (err error) {
 	sdk.Logger(ctx).Info().Msg("Tearing down the ClickHouse Source")
 
-	if s.iterator != nil {
-		err = s.iterator.Stop()
+	if s.rows != nil {
+		err = s.rows.Close()
 	}
 
 	if s.db != nil {
@@ -185,4 +220,45 @@ func (s *Source) Teardown(ctx context.Context) (err error) {
 	}
 
 	return
+}
+
+// returns a bool indicating whether the source has the next record to return or not.
+func (s *Source) hasNext(ctx context.Context) (bool, error) {
+	if s.rows != nil && s.rows.Next() {
+		return true, nil
+	}
+
+	if err := s.loadRows(ctx); err != nil {
+		return false, fmt.Errorf("load rows: %w", err)
+	}
+
+	return s.rows.Next(), nil
+}
+
+// selects a batch of rows from a database, based on the
+// table, columns, orderingColumn, batchSize and the current position.
+func (s *Source) loadRows(ctx context.Context) error {
+	columns := "*"
+	if len(s.config.Columns) > 0 {
+		columns = strings.Join(s.config.Columns, ",")
+	}
+
+	whereClause := ""
+	args := make([]any, 0, 1)
+	if s.lastProcessedVal != nil {
+		whereClause = fmt.Sprintf(whereClauseFmt, s.config.OrderingColumn)
+		args = append(args, s.lastProcessedVal)
+	}
+
+	query := fmt.Sprintf(querySelectRowsFmt,
+		columns, s.config.Table, whereClause, s.config.OrderingColumn, s.config.BatchSize)
+
+	rows, err := s.db.QueryxContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("execute select query %q, %v: %w", query, args, err)
+	}
+
+	s.rows = rows
+
+	return nil
 }
