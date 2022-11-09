@@ -1,4 +1,4 @@
-// Copyright © 2022 Meroxa, Inc.
+// Copyright © 2022 Meroxa, Inc. & Yalantis
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ var version = "v0.0.0-dev"
 func Specification() sdk.Specification {
 	return sdk.Specification{
 		Name:    "clickhouse",
-		Summary: "ClickHouse source and destination plugin for Conduit, written in Go.",
+		Summary: "ClickHouse destination plugin for Conduit, written in Go.",
 		Description: "ClickHouse connector is one of Conduit plugins. " +
-			"It provides a source and a destination ClickHouse connector.",
+			"It provides a destination ClickHouse connector.",
 		Version: version,
-		Author:  "Meroxa, Inc.",
+		Author:  "Meroxa, Inc. & Yalantis",
 	}
 }
