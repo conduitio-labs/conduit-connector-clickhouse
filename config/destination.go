@@ -21,7 +21,7 @@ import (
 
 // Destination is a destination configuration needed to connect to ClickHouse database.
 type Destination struct {
-	configuration
+	Configuration
 
 	// KeyColumns is the configuration of key column names, separated by commas.
 	KeyColumns []string `json:"keyColumns"`
@@ -35,18 +35,20 @@ func ParseDestination(cfg map[string]string) (Destination, error) {
 	}
 
 	destinationConfig := Destination{
-		configuration: config,
+		Configuration: config,
 	}
 
 	if cfg[KeyColumns] == "" {
 		return destinationConfig, nil
 	}
 
-	keyColumns := strings.Split(cfg[KeyColumns], ",")
+	keyColumns := strings.Split(strings.ReplaceAll(cfg[KeyColumns], " ", ""), ",")
 	for i := range keyColumns {
-		if keyColumn := strings.TrimSpace(keyColumns[i]); keyColumn != "" {
-			destinationConfig.KeyColumns = append(destinationConfig.KeyColumns, keyColumn)
+		if keyColumns[i] == "" {
+			return Destination{}, fmt.Errorf("invalid %q", KeyColumns)
 		}
+
+		destinationConfig.KeyColumns = append(destinationConfig.KeyColumns, keyColumns[i])
 	}
 
 	return destinationConfig, nil

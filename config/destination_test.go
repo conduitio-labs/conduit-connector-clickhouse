@@ -15,6 +15,7 @@
 package config
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -29,14 +30,27 @@ func TestParseDestination(t *testing.T) {
 		err  error
 	}{
 		{
-			name: "valid config with keyColumns field",
+			name: "success_required_values",
+			in: map[string]string{
+				URL:   testURL,
+				Table: testTable,
+			},
+			want: Destination{
+				Configuration: Configuration{
+					URL:   testURL,
+					Table: testTable,
+				},
+			},
+		},
+		{
+			name: "success_keyColumns_has_one_key",
 			in: map[string]string{
 				URL:        testURL,
 				Table:      testTable,
 				KeyColumns: "id",
 			},
 			want: Destination{
-				configuration: configuration{
+				Configuration: Configuration{
 					URL:   testURL,
 					Table: testTable,
 				},
@@ -44,19 +58,112 @@ func TestParseDestination(t *testing.T) {
 			},
 		},
 		{
-			name: "valid config with keyColumns fields",
+			name: "success_keyColumns_has_two_keys",
 			in: map[string]string{
 				URL:        testURL,
 				Table:      testTable,
-				KeyColumns: "id ,name , ,  ,,",
+				KeyColumns: "id,name",
 			},
 			want: Destination{
-				configuration: configuration{
+				Configuration: Configuration{
 					URL:   testURL,
 					Table: testTable,
 				},
 				KeyColumns: []string{"id", "name"},
 			},
+		},
+		{
+			name: "success_keyColumns_space_between_keys",
+			in: map[string]string{
+				URL:        testURL,
+				Table:      testTable,
+				KeyColumns: "id, name",
+			},
+			want: Destination{
+				Configuration: Configuration{
+					URL:   testURL,
+					Table: testTable,
+				},
+				KeyColumns: []string{"id", "name"},
+			},
+		},
+		{
+			name: "success_keyColumns_ends_with_space",
+			in: map[string]string{
+				URL:        testURL,
+				Table:      testTable,
+				KeyColumns: "id,name ",
+			},
+			want: Destination{
+				Configuration: Configuration{
+					URL:   testURL,
+					Table: testTable,
+				},
+				KeyColumns: []string{"id", "name"},
+			},
+		},
+		{
+			name: "success_keyColumns_starts_with_space",
+			in: map[string]string{
+				URL:        testURL,
+				Table:      testTable,
+				KeyColumns: " id,name",
+			},
+			want: Destination{
+				Configuration: Configuration{
+					URL:   testURL,
+					Table: testTable,
+				},
+				KeyColumns: []string{"id", "name"},
+			},
+		},
+		{
+			name: "success_keyColumns_space_between_keys_before_comma",
+			in: map[string]string{
+				URL:        testURL,
+				Table:      testTable,
+				KeyColumns: "id ,name",
+			},
+			want: Destination{
+				Configuration: Configuration{
+					URL:   testURL,
+					Table: testTable,
+				},
+				KeyColumns: []string{"id", "name"},
+			},
+		},
+		{
+			name: "success_keyColumns_two_spaces",
+			in: map[string]string{
+				URL:        testURL,
+				Table:      testTable,
+				KeyColumns: "id,  name",
+			},
+			want: Destination{
+				Configuration: Configuration{
+					URL:   testURL,
+					Table: testTable,
+				},
+				KeyColumns: []string{"id", "name"},
+			},
+		},
+		{
+			name: "failure_keyColumns_ends_with_comma",
+			in: map[string]string{
+				URL:        testURL,
+				Table:      testTable,
+				KeyColumns: "id,name,",
+			},
+			err: fmt.Errorf("invalid %q", KeyColumns),
+		},
+		{
+			name: "failure_keyColumns_starts_with_comma",
+			in: map[string]string{
+				URL:        testURL,
+				Table:      testTable,
+				KeyColumns: ",id,name",
+			},
+			err: fmt.Errorf("invalid %q", KeyColumns),
 		},
 	}
 

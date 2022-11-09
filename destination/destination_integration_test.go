@@ -277,7 +277,7 @@ func TestDestination_Write_successDelete(t *testing.T) {
 	is.Equal(n, 1)
 
 	_, err = getStringFieldByIntField(db, cfg[config.Table], 42)
-	is.True(err != nil)
+	is.Equal(err.Error(), "scan row: sql: no rows in result set")
 
 	cancel()
 
@@ -327,7 +327,7 @@ func TestDestination_Write_failedWrongColumn(t *testing.T) {
 			}},
 		},
 	})
-	is.True(err != nil)
+	is.True(strings.Contains(err.Error(), "record with no key: exec insert"))
 
 	cancel()
 

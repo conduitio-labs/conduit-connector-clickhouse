@@ -33,38 +33,39 @@ func TestParseGeneral(t *testing.T) {
 	tests := []struct {
 		name string
 		in   map[string]string
-		want configuration
+		want Configuration
 		err  error
 	}{
 		{
-			name: "valid config",
+			name: "success_required_values",
 			in: map[string]string{
 				URL:   testURL,
 				Table: testTable,
 			},
-			want: configuration{
+			want: Configuration{
 				URL:   testURL,
 				Table: testTable,
 			},
 		},
 		{
-			name: "url is required",
+			name: "failure_required_url",
 			in: map[string]string{
 				Table: testTable,
 			},
-			err: fmt.Errorf("validate general config: %w", errRequired(URL)),
+			err: fmt.Errorf("validate general config: %w", fmt.Errorf("%q must be set", URL)),
 		},
 		{
-			name: "table is required",
+			name: "failure_required_table",
 			in: map[string]string{
 				URL: testURL,
 			},
-			err: fmt.Errorf("validate general config: %w", errRequired(Table)),
+			err: fmt.Errorf("validate general config: %w", fmt.Errorf("%q must be set", Table)),
 		},
 		{
-			name: "a couple required fields are empty (a password and an url)",
+			name: "failure_required_url_and_table",
 			in:   map[string]string{},
-			err:  fmt.Errorf("validate general config: %w", multierr.Combine(errRequired(URL), errRequired(Table))),
+			err: fmt.Errorf("validate general config: %w",
+				multierr.Combine(fmt.Errorf("%q must be set", URL), fmt.Errorf("%q must be set", Table))),
 		},
 	}
 

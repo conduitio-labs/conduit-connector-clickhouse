@@ -22,11 +22,6 @@ import (
 	"go.uber.org/multierr"
 )
 
-const (
-	requiredErrMsg   = "%q value must be set"
-	outOfRangeErrMsg = "%q is out of range"
-)
-
 var (
 	validatorInstance *v.Validate
 	once              sync.Once
@@ -54,22 +49,12 @@ func validate(s interface{}) error {
 		for _, e := range validationErr.(v.ValidationErrors) {
 			switch e.ActualTag() {
 			case "required":
-				err = multierr.Append(err, errRequired(getKeyName(e.Field())))
+				err = multierr.Append(err, fmt.Errorf("%q must be set", getKeyName(e.Field())))
 			case "gte", "lte":
-				err = multierr.Append(err, errOutOfRange(getKeyName(e.Field())))
+				err = multierr.Append(err, fmt.Errorf("%q is out of range", getKeyName(e.Field())))
 			}
 		}
 	}
 
 	return err
-}
-
-// returns the formatted required field error.
-func errRequired(name string) error {
-	return fmt.Errorf(requiredErrMsg, name)
-}
-
-// returns the formatted out of range error.
-func errOutOfRange(name string) error {
-	return fmt.Errorf(outOfRangeErrMsg, name)
 }
