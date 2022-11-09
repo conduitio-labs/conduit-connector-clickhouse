@@ -531,16 +531,13 @@ func TestDestination_Write_successCheckEngines(t *testing.T) {
 					}},
 				},
 			})
-			if tt.supportMutations {
-				is.NoErr(err)
-				is.Equal(n, 1)
+			is.NoErr(err)
+			is.Equal(n, 1)
 
+			if tt.supportMutations {
 				name, err = getStringFieldByIntField(db, cfg[config.Table], 42)
 				is.NoErr(err)
 				is.Equal(name, "Sam")
-			} else {
-				is.True(strings.Contains(err.Error(), tt.mutationErrMsg))
-				is.Equal(n, 0)
 			}
 
 			// OperationDelete
@@ -550,16 +547,13 @@ func TestDestination_Write_successCheckEngines(t *testing.T) {
 					Key:       sdk.RawData(`{"Int32Type":42}`),
 				},
 			})
-			if tt.supportMutations {
-				is.NoErr(err)
-				is.Equal(n, 1)
+			is.NoErr(err)
+			is.Equal(n, 1)
 
+			if tt.supportMutations {
 				name, err = getStringFieldByIntField(db, cfg[config.Table], 42)
 				is.True(err != nil)
 				is.Equal(name, "")
-			} else {
-				is.True(strings.Contains(err.Error(), tt.mutationErrMsg))
-				is.Equal(n, 0)
 			}
 
 			cancel()
