@@ -39,8 +39,7 @@ ORDER BY {{config.orderingColumn}};
 
 ### CDC
 
-When all existing rows have been read, the iterator will start selecting all newly inserted rows. CDC does not support
-the capture of updated or deleted operation. All records have an `OperationCreate` operation.
+When all existing data has been read, the connector will only detect new rows.
 
 ### Position
 
