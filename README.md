@@ -57,10 +57,18 @@ configuration.
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|------------------------------------------------|
 | `url`            | [DSN](https://github.com/ClickHouse/clickhouse-go#dsn) to connect to the database.                                                                                  | **true** | `http://username:password@host1:8123/database` |
 | `table`          | Name of the table that the connector should read.                                                                                                                   | **true** | `table_name`                                   |
-| `keyColumns`     | Comma-separated list of column names to build the `sdk.Record.Key`. Column names are the keys of the `sdk.Record.Key` map, and the values are taken from the rows.  | **true** | `id,name`                                      |
 | `orderingColumn` | Column name that the connector will use for ordering rows. Column must contain unique values and suitable for sorting, otherwise the snapshot won't work correctly. | **true** | `id`                                           |
+| `keyColumns`     | Comma-separated list of column names to build the `sdk.Record.Key`. See more: [key handling](#key-handling).                                                        | false    | `id,name`                                      |
 | `columns`        | Comma-separated list of column names that should be included in each payload of the `sdk.Record`. By default includes all columns.                                  | false    | `id,name,age`                                  |
 | `batchSize`      | Size of rows batch. Min is 1 and max is 100000. The default is 1000.                                                                                                | false    | `100`                                          |
+
+#### Key handling
+
+List items are the keys of the `sdk.Record.Key` map, and the values are taken from the row's data.
+
+The `keyColumns` is an optional field. If the field is empty, the system makes a request to the database and uses the
+received list of primary keys of the specified table. If the table does not contain primary keys, the system uses the
+value of the `orderingColumn` field as the `keyColumns` value.
 
 ## Destination
 

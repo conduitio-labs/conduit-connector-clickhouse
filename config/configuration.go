@@ -32,9 +32,11 @@ const (
 // Configuration is the general configurations needed to connect to ClickHouse database.
 type Configuration struct {
 	// URL is the configuration of the connection string to connect to ClickHouse database.
-	URL string `json:"url" validate:"required"`
+	URL string `validate:"required"`
 	// Table is the configuration of the table name.
-	Table string `json:"table" validate:"required"`
+	Table string `validate:"required"`
+	// KeyColumns is the configuration of key column names, separated by commas.
+	KeyColumns []string
 }
 
 // parses a general configuration.
@@ -47,6 +49,19 @@ func parseConfiguration(cfg map[string]string) (Configuration, error) {
 	err := validate(config)
 	if err != nil {
 		return Configuration{}, fmt.Errorf("validate general config: %w", err)
+	}
+
+	if cfg[KeyColumns] == "" {
+		return config, nil
+	}
+
+	keyColumns := strings.Split(strings.ReplaceAll(cfg[KeyColumns], " ", ""), ",")
+	for i := range keyColumns {
+		if keyColumns[i] == "" {
+			return Configuration{}, fmt.Errorf("invalid %q", KeyColumns)
+		}
+
+		config.KeyColumns = append(config.KeyColumns, keyColumns[i])
 	}
 
 	return config, nil

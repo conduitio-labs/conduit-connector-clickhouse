@@ -35,8 +35,6 @@ const (
 type Source struct {
 	Configuration
 
-	// KeyColumns is the configuration of key column names, separated by commas.
-	KeyColumns []string `validate:"required"`
 	// OrderingColumn is a name of a column that the connector will use for ordering rows.
 	OrderingColumn string `validate:"required"`
 	// Columns list of column names that should be included in each Record's payload.
@@ -56,17 +54,6 @@ func ParseSource(cfg map[string]string) (Source, error) {
 		Configuration:  config,
 		OrderingColumn: cfg[OrderingColumn],
 		BatchSize:      defaultBatchSize,
-	}
-
-	if cfg[KeyColumns] != "" {
-		keyColumns := strings.Split(strings.ReplaceAll(cfg[KeyColumns], " ", ""), ",")
-		for i := range keyColumns {
-			if keyColumns[i] == "" {
-				return Source{}, fmt.Errorf("invalid %q", KeyColumns)
-			}
-
-			sourceConfig.KeyColumns = append(sourceConfig.KeyColumns, keyColumns[i])
-		}
 	}
 
 	if cfg[Columns] != "" {
