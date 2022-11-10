@@ -18,13 +18,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/writer"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
-
-	// Go driver for ClickHouse.
-	_ "github.com/ClickHouse/clickhouse-go/v2"
 )
 
 // Writer defines a writer interface needed for the Destination.
@@ -97,10 +95,16 @@ func (d *Destination) Open(ctx context.Context) (err error) {
 
 	d.db = db
 
+	isSupportMutations, err := d.checkSupportMutations(ctx)
+	if err != nil {
+		return fmt.Errorf("support mutations: %w", err)
+	}
+
 	d.writer, err = writer.NewWriter(ctx, writer.Params{
-		DB:         db,
-		Table:      d.config.Table,
-		KeyColumns: d.config.KeyColumns,
+		DB:                 db,
+		Table:              d.config.Table,
+		KeyColumns:         d.config.KeyColumns,
+		IsSupportMutations: isSupportMutations,
 	})
 	if err != nil {
 		return fmt.Errorf("new writer: %w", err)
@@ -142,4 +146,39 @@ func (d *Destination) Teardown(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (d *Destination) checkSupportMutations(ctx context.Context) (bool, error) {
+	engines := map[string]struct{}{
+		"MergeTree":                    {},
+		"ReplacingMergeTree":           {},
+		"SummingMergeTree":             {},
+		"AggregatingMergeTree":         {},
+		"CollapsingMergeTree":          {},
+		"VersionedCollapsingMergeTree": {},
+		"GraphiteMergeTree":            {},
+		"Distributed":                  {},
+		"Merge":                        {},
+	}
+
+	options, err := clickhouse.ParseDSN(d.config.URL)
+	if err != nil {
+		return false, fmt.Errorf("parse dsn: %w", err)
+	}
+
+	row := d.db.QueryRowxContext(ctx, "SELECT engine FROM system.tables WHERE database=? and name=?;",
+		options.Auth.Database, d.config.Table)
+	if err != nil {
+		return false, fmt.Errorf("select table engine: %w", err)
+	}
+
+	engine := ""
+	err = row.Scan(&engine)
+	if err != nil {
+		return false, fmt.Errorf("scan table engine: %w", err)
+	}
+
+	_, isSupportMutations := engines[engine]
+
+	return isSupportMutations, nil
 }
