@@ -68,10 +68,9 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 				"values and suitable for sorting, otherwise the snapshot won't work correctly.",
 		},
 		config.KeyColumns: {
-			Default:  "",
-			Required: false,
-			Description: "Comma-separated list of column names to build the sdk.Record.Key. " +
-				"Column names are the keys of the sdk.Record.Key map, and the values are taken from the row.",
+			Default:     "",
+			Required:    false,
+			Description: "Comma-separated list of column names to build the sdk.Record.Key.",
 		},
 		config.Columns: {
 			Default:  "",

@@ -64,8 +64,6 @@ configuration.
 
 #### Key handling
 
-List items are the keys of the `sdk.Record.Key` map, and the values are taken from the row's data.
-
 The `keyColumns` is an optional field. If the field is empty, the system makes a request to the database and uses the
 received list of primary keys of the specified table. If the table does not contain primary keys, the system uses the
 value of the `orderingColumn` field as the `keyColumns` value.
