@@ -38,25 +38,28 @@ const (
 
 // Writer implements a writer logic for ClickHouse destination.
 type Writer struct {
-	db          *sqlx.DB
-	table       string
-	keyColumns  []string
-	columnTypes map[string]string
+	db                *sqlx.DB
+	table             string
+	keyColumns        []string
+	supportsMutations bool
+	columnTypes       map[string]string
 }
 
 // Params is an incoming params for the New function.
 type Params struct {
-	DB         *sqlx.DB
-	Table      string
-	KeyColumns []string
+	DB                *sqlx.DB
+	Table             string
+	KeyColumns        []string
+	SupportsMutations bool
 }
 
 // NewWriter creates new instance of the Writer.
 func NewWriter(ctx context.Context, params Params) (*Writer, error) {
 	writer := &Writer{
-		db:         params.DB,
-		table:      params.Table,
-		keyColumns: params.KeyColumns,
+		db:                params.DB,
+		table:             params.Table,
+		keyColumns:        params.KeyColumns,
+		supportsMutations: params.SupportsMutations,
 	}
 
 	columnTypes, err := getColumnTypes(ctx, writer.db, writer.table)
@@ -107,6 +110,12 @@ func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 
 // Update updates a record.
 func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
+	if !w.supportsMutations {
+		sdk.Logger(ctx).Warn().Msg("The current table engine doesn't support update operation")
+
+		return nil
+	}
+
 	tableName := w.getTableName(record.Metadata)
 
 	payload, err := w.structurizeData(record.Payload.After)
@@ -174,6 +183,12 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 
 // Delete deletes a record.
 func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
+	if !w.supportsMutations {
+		sdk.Logger(ctx).Warn().Msg("The current table engine doesn't support delete operation")
+
+		return nil
+	}
+
 	tableName := w.getTableName(record.Metadata)
 
 	key, err := w.structurizeData(record.Key)
