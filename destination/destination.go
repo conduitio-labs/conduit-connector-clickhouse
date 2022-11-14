@@ -25,6 +25,32 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type engineName string
+
+const (
+	mergeTree                    engineName = "MergeTree"
+	replacingMergeTree           engineName = "ReplacingMergeTree"
+	summingMergeTree             engineName = "SummingMergeTree"
+	aggregatingMergeTree         engineName = "AggregatingMergeTree"
+	collapsingMergeTree          engineName = "CollapsingMergeTree"
+	versionedCollapsingMergeTree engineName = "VersionedCollapsingMergeTree"
+	graphiteMergeTree            engineName = "GraphiteMergeTree"
+	distributed                  engineName = "Distributed"
+	merge                        engineName = "Merge"
+)
+
+var engines = map[engineName]struct{}{
+	mergeTree:                    {},
+	replacingMergeTree:           {},
+	summingMergeTree:             {},
+	aggregatingMergeTree:         {},
+	collapsingMergeTree:          {},
+	versionedCollapsingMergeTree: {},
+	graphiteMergeTree:            {},
+	distributed:                  {},
+	merge:                        {},
+}
+
 // Writer defines a writer interface needed for the Destination.
 type Writer interface {
 	Insert(context.Context, sdk.Record) error
@@ -95,16 +121,16 @@ func (d *Destination) Open(ctx context.Context) (err error) {
 
 	d.db = db
 
-	isSupportMutations, err := d.checkSupportMutations(ctx)
+	supportsMutations, err := d.checkSupportMutations(ctx)
 	if err != nil {
 		return fmt.Errorf("support mutations: %w", err)
 	}
 
 	d.writer, err = writer.NewWriter(ctx, writer.Params{
-		DB:                 db,
-		Table:              d.config.Table,
-		KeyColumns:         d.config.KeyColumns,
-		IsSupportMutations: isSupportMutations,
+		DB:                db,
+		Table:             d.config.Table,
+		KeyColumns:        d.config.KeyColumns,
+		SupportsMutations: supportsMutations,
 	})
 	if err != nil {
 		return fmt.Errorf("new writer: %w", err)
@@ -149,18 +175,6 @@ func (d *Destination) Teardown(ctx context.Context) error {
 }
 
 func (d *Destination) checkSupportMutations(ctx context.Context) (bool, error) {
-	engines := map[string]struct{}{
-		"MergeTree":                    {},
-		"ReplacingMergeTree":           {},
-		"SummingMergeTree":             {},
-		"AggregatingMergeTree":         {},
-		"CollapsingMergeTree":          {},
-		"VersionedCollapsingMergeTree": {},
-		"GraphiteMergeTree":            {},
-		"Distributed":                  {},
-		"Merge":                        {},
-	}
-
 	options, err := clickhouse.ParseDSN(d.config.URL)
 	if err != nil {
 		return false, fmt.Errorf("parse dsn: %w", err)
@@ -178,7 +192,7 @@ func (d *Destination) checkSupportMutations(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("scan table engine: %w", err)
 	}
 
-	_, isSupportMutations := engines[engine]
+	_, supportsMutations := engines[engineName(engine)]
 
-	return isSupportMutations, nil
+	return supportsMutations, nil
 }
