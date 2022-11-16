@@ -19,14 +19,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/source/iterator"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/multierr"
-
-	// Go driver for ClickHouse.
-	_ "github.com/ClickHouse/clickhouse-go/v2"
 )
 
 // Iterator interface.
@@ -63,17 +61,16 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 			Required:    true,
 			Description: "Name of the table that the connector should read.",
 		},
-		config.KeyColumns: {
-			Default:  "",
-			Required: true,
-			Description: "Comma-separated list of column names to build the sdk.Record.Key. " +
-				"Column names are the keys of the sdk.Record.Key map, and the values are taken from the row.",
-		},
 		config.OrderingColumn: {
 			Default:  "",
 			Required: true,
 			Description: "Column name that the connector will use for ordering rows. Column must contain unique " +
 				"values and suitable for sorting, otherwise the snapshot won't work correctly.",
+		},
+		config.KeyColumns: {
+			Default:     "",
+			Required:    false,
+			Description: "Comma-separated list of column names to build the sdk.Record.Key.",
 		},
 		config.Columns: {
 			Default:  "",
@@ -128,6 +125,11 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 
 	s.db = db
 
+	options, err := clickhouse.ParseDSN(s.config.URL)
+	if err != nil {
+		return fmt.Errorf("parse dsn: %w", err)
+	}
+
 	s.iterator, err = iterator.New(ctx, iterator.Params{
 		DB:               db,
 		LastProcessedVal: lastProcessedVal,
@@ -136,6 +138,7 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 		OrderingColumn:   s.config.OrderingColumn,
 		Columns:          s.config.Columns,
 		BatchSize:        s.config.BatchSize,
+		Database:         options.Auth.Database,
 	})
 	if err != nil {
 		return fmt.Errorf("new iterator: %w", err)

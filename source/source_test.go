@@ -45,10 +45,10 @@ func TestSource_Configure(t *testing.T) {
 	is.NoErr(err)
 	is.Equal(s.config, config.Source{
 		Configuration: config.Configuration{
-			URL:   testURL,
-			Table: testTable,
+			URL:        testURL,
+			Table:      testTable,
+			KeyColumns: []string{"id"},
 		},
-		KeyColumns:     []string{"id"},
 		OrderingColumn: "created_at",
 		BatchSize:      1000,
 	})
