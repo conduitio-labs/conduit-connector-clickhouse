@@ -31,6 +31,17 @@ const (
 
 	querySelectRowsFmt = "SELECT %s FROM %s%s ORDER BY %s ASC LIMIT %d;"
 	whereClauseFmt     = " WHERE %s > ?"
+
+	querySelectPKs = `
+SELECT 
+  name 
+FROM 
+  system.columns 
+WHERE 
+  is_in_primary_key = 1 
+  AND table = ? 
+  AND database = ?;
+`
 )
 
 // Iterator is an implementation of an iterator for ClickHouse.
@@ -51,6 +62,8 @@ type Iterator struct {
 	columns []string
 	// size of batch
 	batchSize int
+	// database name
+	database string
 }
 
 // Params is an incoming iterator params for the New function.
@@ -62,6 +75,7 @@ type Params struct {
 	OrderingColumn   string
 	Columns          []string
 	BatchSize        int
+	Database         string
 }
 
 // New creates a new instance of the iterator.
@@ -74,9 +88,15 @@ func New(ctx context.Context, params Params) (*Iterator, error) {
 		orderingColumn:   params.OrderingColumn,
 		columns:          params.Columns,
 		batchSize:        params.BatchSize,
+		database:         params.Database,
 	}
 
-	err := iterator.loadRows(ctx)
+	err := iterator.populateKeyColumns(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("populate key columns: %w", err)
+	}
+
+	err = iterator.loadRows(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("load rows: %w", err)
 	}
@@ -182,6 +202,37 @@ func (iter *Iterator) loadRows(ctx context.Context) error {
 	}
 
 	iter.rows = rows
+
+	return nil
+}
+
+// populates keyColumn from the database's metadata
+// or from the orderingColumn configuration field.
+func (iter *Iterator) populateKeyColumns(ctx context.Context) error {
+	if len(iter.keyColumns) != 0 {
+		return nil
+	}
+
+	rows, err := iter.db.QueryxContext(ctx, querySelectPKs, iter.table, iter.database)
+	if err != nil {
+		return fmt.Errorf("select primary keys: %w", err)
+	}
+	defer rows.Close()
+
+	keyColumn := ""
+	for rows.Next() {
+		if err = rows.Scan(&keyColumn); err != nil {
+			return fmt.Errorf("scan key column value: %w", err)
+		}
+
+		iter.keyColumns = append(iter.keyColumns, keyColumn)
+	}
+
+	if len(iter.keyColumns) != 0 {
+		return nil
+	}
+
+	iter.keyColumns = []string{iter.orderingColumn}
 
 	return nil
 }

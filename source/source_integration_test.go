@@ -545,16 +545,185 @@ func TestSource_Read_successCombined(t *testing.T) {
 	is.NoErr(err)
 }
 
-func prepareConfig(t *testing.T, keyColumns []string, orderingColumn string) map[string]string {
+func TestSource_Read_keyColumns(t *testing.T) {
+	var (
+		is  = is.New(t)
+		cfg = map[string]string{
+			config.URL:            getURL(t),
+			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
+			config.OrderingColumn: "Int32Type2",
+			config.KeyColumns:     "Int32Type0",
+		}
+	)
+
+	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	is.NoErr(err)
+	defer db.Close()
+
+	err = db.Ping()
+	is.NoErr(err)
+
+	_, err = db.Exec(fmt.Sprintf(`
+	CREATE TABLE %s
+	(
+		Int32Type0	Int32,
+		Int32Type1	Int32,
+		Int32Type2	Int32,
+	) ENGINE ReplacingMergeTree() PRIMARY KEY (Int32Type0, Int32Type1);`, cfg[config.Table]))
+	is.NoErr(err)
+
+	defer func() {
+		err = dropTable(db, cfg[config.Table])
+		is.NoErr(err)
+	}()
+
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s VALUES (10, 20, 30)", cfg[config.Table]))
+	is.NoErr(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	src := NewSource()
+
+	err = src.Configure(ctx, cfg)
+	is.NoErr(err)
+
+	err = src.Open(ctx, nil)
+	is.NoErr(err)
+
+	record, err := src.Read(ctx)
+	is.NoErr(err)
+	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{"Int32Type0": int32(10)}))
+
+	cancel()
+
+	err = src.Teardown(context.Background())
+	is.NoErr(err)
+}
+
+func TestSource_Read_keyColumnsPrimaryKeys(t *testing.T) {
+	var (
+		is  = is.New(t)
+		cfg = map[string]string{
+			config.URL:            getURL(t),
+			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
+			config.OrderingColumn: "Int32Type2",
+		}
+	)
+
+	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	is.NoErr(err)
+	defer db.Close()
+
+	err = db.Ping()
+	is.NoErr(err)
+
+	_, err = db.Exec(fmt.Sprintf(`
+	CREATE TABLE %s
+	(
+		Int32Type0	Int32,
+		Int32Type1	Int32,
+		Int32Type2	Int32,
+	) ENGINE ReplacingMergeTree() PRIMARY KEY (Int32Type0, Int32Type1);`, cfg[config.Table]))
+	is.NoErr(err)
+
+	defer func() {
+		err = dropTable(db, cfg[config.Table])
+		is.NoErr(err)
+	}()
+
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s VALUES (10, 20, 30)", cfg[config.Table]))
+	is.NoErr(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	src := NewSource()
+
+	err = src.Configure(ctx, cfg)
+	is.NoErr(err)
+
+	err = src.Open(ctx, nil)
+	is.NoErr(err)
+
+	record, err := src.Read(ctx)
+	is.NoErr(err)
+	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{"Int32Type0": int32(10), "Int32Type1": int32(20)}))
+
+	cancel()
+
+	err = src.Teardown(context.Background())
+	is.NoErr(err)
+}
+
+func TestSource_Read_keyColumnsOrderingColumn(t *testing.T) {
+	var (
+		is  = is.New(t)
+		cfg = map[string]string{
+			config.URL:            getURL(t),
+			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
+			config.OrderingColumn: "Int32Type1",
+		}
+	)
+
+	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	is.NoErr(err)
+	defer db.Close()
+
+	err = db.Ping()
+	is.NoErr(err)
+
+	_, err = db.Exec(fmt.Sprintf(`
+	CREATE TABLE %s
+	(
+		Int32Type0	Int32,
+		Int32Type1	Int32,
+	) ENGINE Log();`, cfg[config.Table]))
+	is.NoErr(err)
+
+	defer func() {
+		err = dropTable(db, cfg[config.Table])
+		is.NoErr(err)
+	}()
+
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s VALUES (10, 20)", cfg[config.Table]))
+	is.NoErr(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	src := NewSource()
+
+	err = src.Configure(ctx, cfg)
+	is.NoErr(err)
+
+	err = src.Open(ctx, nil)
+	is.NoErr(err)
+
+	record, err := src.Read(ctx)
+	is.NoErr(err)
+	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{"Int32Type1": int32(20)}))
+
+	cancel()
+
+	err = src.Teardown(context.Background())
+	is.NoErr(err)
+}
+
+func getURL(t *testing.T) string {
 	url := os.Getenv("CLICKHOUSE_URL")
 	if url == "" {
 		t.Skip("CLICKHOUSE_URL env var must be set")
 
-		return nil
+		return ""
 	}
 
+	return url
+}
+
+func prepareConfig(t *testing.T, keyColumns []string, orderingColumn string) map[string]string {
 	return map[string]string{
-		config.URL:            url,
+		config.URL:            getURL(t),
 		config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 		config.KeyColumns:     strings.Join(keyColumns, ","),
 		config.OrderingColumn: orderingColumn,
