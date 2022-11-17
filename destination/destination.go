@@ -88,7 +88,7 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 		config.KeyColumns: {
 			Default:     "",
 			Required:    false,
-			Description: "Comma-separated list of column names for key handling. ",
+			Description: "Comma-separated list of column names for key handling.",
 		},
 	}
 }
