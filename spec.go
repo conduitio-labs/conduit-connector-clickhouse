@@ -29,7 +29,7 @@ func Specification() sdk.Specification {
 		Name:    "clickhouse",
 		Summary: "ClickHouse destination plugin for Conduit, written in Go.",
 		Description: "ClickHouse connector is one of Conduit plugins. " +
-			"It provides a destination ClickHouse connector.",
+			"It provides both, a Source and a Destination ClickHouse connectors.",
 		Version: version,
 		Author:  "Meroxa, Inc. & Yalantis",
 	}

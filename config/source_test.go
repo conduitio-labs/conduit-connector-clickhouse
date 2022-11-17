@@ -115,7 +115,7 @@ func TestParseSource(t *testing.T) {
 			},
 		},
 		{
-			name: "success_columns_has_one_key",
+			name: "success_columns_has_two_keys",
 			in: map[string]string{
 				URL:            testURL,
 				Table:          testTable,
