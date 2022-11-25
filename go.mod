@@ -3,7 +3,7 @@ module github.com/conduitio-labs/conduit-connector-clickhouse
 go 1.18
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.4.1
+	github.com/ClickHouse/clickhouse-go/v2 v2.4.2
 	github.com/conduitio/conduit-connector-sdk v0.3.0
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/golang/mock v1.6.0
@@ -14,7 +14,7 @@ require (
 )
 
 require (
-	github.com/ClickHouse/ch-go v0.49.0 // indirect
+	github.com/ClickHouse/ch-go v0.50.0 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/conduitio/conduit-connector-protocol v0.3.0 // indirect
 	github.com/fatih/color v1.7.0 // indirect
