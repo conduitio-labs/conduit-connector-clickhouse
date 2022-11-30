@@ -43,7 +43,7 @@ func validate(s interface{}) error {
 	validationErr := Get().Struct(s)
 	if validationErr != nil {
 		if _, ok := validationErr.(*v.InvalidValidationError); ok {
-			return fmt.Errorf("validate general config struct: %w", validationErr)
+			return fmt.Errorf("validate struct: %w", validationErr)
 		}
 
 		for _, e := range validationErr.(v.ValidationErrors) {

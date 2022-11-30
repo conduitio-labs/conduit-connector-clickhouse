@@ -27,7 +27,7 @@ type Destination struct {
 func ParseDestination(cfg map[string]string) (Destination, error) {
 	config, err := parseConfiguration(cfg)
 	if err != nil {
-		return Destination{}, fmt.Errorf("parse general config: %w", err)
+		return Destination{}, fmt.Errorf("parse config: %w", err)
 	}
 
 	destinationConfig := Destination{

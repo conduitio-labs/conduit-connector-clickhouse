@@ -27,7 +27,7 @@ const (
 	testTable = "test_table"
 )
 
-func TestParseGeneral(t *testing.T) {
+func TestParseConfiguration(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -170,19 +170,19 @@ func TestParseGeneral(t *testing.T) {
 			in: map[string]string{
 				Table: testTable,
 			},
-			err: fmt.Errorf("validate general config: %w", fmt.Errorf("%q must be set", URL)),
+			err: fmt.Errorf("validate config: %w", fmt.Errorf("%q must be set", URL)),
 		},
 		{
 			name: "failure_required_table",
 			in: map[string]string{
 				URL: testURL,
 			},
-			err: fmt.Errorf("validate general config: %w", fmt.Errorf("%q must be set", Table)),
+			err: fmt.Errorf("validate config: %w", fmt.Errorf("%q must be set", Table)),
 		},
 		{
 			name: "failure_required_url_and_table",
 			in:   map[string]string{},
-			err: fmt.Errorf("validate general config: %w",
+			err: fmt.Errorf("validate config: %w",
 				multierr.Combine(fmt.Errorf("%q must be set", URL), fmt.Errorf("%q must be set", Table))),
 		},
 	}

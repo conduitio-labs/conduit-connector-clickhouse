@@ -142,9 +142,12 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 		key = make(sdk.StructuredData)
 
 		for i := range w.keyColumns {
-			if val, ok := payload[w.keyColumns[i]]; ok {
-				key[w.keyColumns[i]] = val
+			val, ok := payload[w.keyColumns[i]]
+			if !ok {
+				return fmt.Errorf("key column %q not found", w.keyColumns[i])
 			}
+
+			key[w.keyColumns[i]] = val
 		}
 	}
 
