@@ -710,6 +710,74 @@ func TestSource_Read_keyColumnsOrderingColumn(t *testing.T) {
 	is.NoErr(err)
 }
 
+func TestSource_Read_snapshotIsFalse(t *testing.T) {
+	var (
+		is  = is.New(t)
+		cfg = map[string]string{
+			config.URL:            getURL(t),
+			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
+			config.OrderingColumn: "Int32Type1",
+		}
+	)
+
+	// set snapshot configuration value with "false"
+	cfg[config.Snapshot] = "false"
+
+	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	is.NoErr(err)
+	defer db.Close()
+
+	err = db.Ping()
+	is.NoErr(err)
+
+	_, err = db.Exec(fmt.Sprintf(`
+	CREATE TABLE %s
+	(
+		Int32Type0	Int32,
+		Int32Type1	Int32,
+	) ENGINE Log();`, cfg[config.Table]))
+	is.NoErr(err)
+
+	defer func() {
+		err = dropTable(db, cfg[config.Table])
+		is.NoErr(err)
+	}()
+
+	// insert a row to be sure that this data will not be transferred to the destination
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s VALUES (10, 20)", cfg[config.Table]))
+	is.NoErr(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	src := NewSource()
+
+	err = src.Configure(ctx, cfg)
+	is.NoErr(err)
+
+	err = src.Open(ctx, nil)
+	is.NoErr(err)
+
+	_, err = src.Read(ctx)
+	is.Equal(err, sdk.ErrBackoffRetry)
+
+	// insert an additional row
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s VALUES (20, 30)", cfg[config.Table]))
+	is.NoErr(err)
+
+	record, err := src.Read(ctx)
+	is.NoErr(err)
+	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{"Int32Type1": int32(30)}))
+
+	_, err = src.Read(ctx)
+	is.Equal(err, sdk.ErrBackoffRetry)
+
+	cancel()
+
+	err = src.Teardown(context.Background())
+	is.NoErr(err)
+}
+
 func getURL(t *testing.T) string {
 	url := os.Getenv("CLICKHOUSE_URL")
 	if url == "" {

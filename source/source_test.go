@@ -50,6 +50,7 @@ func TestSource_Configure(t *testing.T) {
 			KeyColumns: []string{"id"},
 		},
 		OrderingColumn: "created_at",
+		Snapshot:       true,
 		BatchSize:      1000,
 	})
 }

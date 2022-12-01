@@ -27,6 +27,9 @@ import (
 	"go.uber.org/multierr"
 )
 
+// querySelectLastProcessedValFmt is a query pattern to select the last value of the orderingColumn column.
+const querySelectLastProcessedValFmt = "SELECT %s FROM %s ORDER BY %s DESC LIMIT 1;"
+
 // Iterator interface.
 type Iterator interface {
 	HasNext(context.Context) (bool, error)
@@ -38,9 +41,10 @@ type Iterator interface {
 type Source struct {
 	sdk.UnimplementedSource
 
-	config   config.Source
-	db       *sqlx.DB
-	iterator Iterator
+	config           config.Source
+	db               *sqlx.DB
+	lastProcessedVal any
+	iterator         Iterator
 }
 
 // NewSource initialises a new source.
@@ -71,6 +75,11 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 			Default:     "",
 			Required:    false,
 			Description: "Comma-separated list of column names to build the sdk.Record.Key.",
+		},
+		config.Snapshot: {
+			Default:     "true",
+			Required:    false,
+			Description: "Whether the connector will take a snapshot of the entire table before starting cdc mode.",
 		},
 		config.Columns: {
 			Default:  "",
@@ -105,25 +114,34 @@ func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error 
 func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 	sdk.Logger(ctx).Info().Msg("Opening a ClickHouse Source...")
 
-	var lastProcessedVal any
+	var err error
 
 	if position != nil {
-		if err := json.Unmarshal(position, &lastProcessedVal); err != nil {
+		if err := json.Unmarshal(position, &s.lastProcessedVal); err != nil {
 			return fmt.Errorf("unmarshal sdk.Position into Position: %w", err)
 		}
 	}
 
-	db, err := sqlx.Open("clickhouse", s.config.URL)
+	s.db, err = sqlx.Open("clickhouse", s.config.URL)
 	if err != nil {
 		return fmt.Errorf("open db connection: %w", err)
 	}
 
-	err = db.Ping()
+	err = s.db.Ping()
 	if err != nil {
 		return fmt.Errorf("ping: %w", err)
 	}
 
-	s.db = db
+	if position != nil {
+		if err = json.Unmarshal(position, &s.lastProcessedVal); err != nil {
+			return fmt.Errorf("unmarshal sdk.Position into Position: %w", err)
+		}
+	} else if !s.config.Snapshot {
+		// populate position with the value of the last row orderingColumn column
+		if err = s.populateLastProcessedVal(ctx); err != nil {
+			return fmt.Errorf("populate last processed value: %w", err)
+		}
+	}
 
 	options, err := clickhouse.ParseDSN(s.config.URL)
 	if err != nil {
@@ -131,8 +149,8 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 	}
 
 	s.iterator, err = iterator.New(ctx, iterator.Params{
-		DB:               db,
-		LastProcessedVal: lastProcessedVal,
+		DB:               s.db,
+		LastProcessedVal: s.lastProcessedVal,
 		Table:            s.config.Table,
 		KeyColumns:       s.config.KeyColumns,
 		OrderingColumn:   s.config.OrderingColumn,
@@ -188,4 +206,24 @@ func (s *Source) Teardown(ctx context.Context) (err error) {
 	}
 
 	return
+}
+
+// populateLastProcessedVal selects the last value of orderingColumn column
+// and sets it to the lastProcessedVal.
+func (s *Source) populateLastProcessedVal(ctx context.Context) error {
+	query := fmt.Sprintf(querySelectLastProcessedValFmt,
+		s.config.OrderingColumn, s.config.Table, s.config.OrderingColumn)
+
+	rows, err := s.db.QueryxContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("execute select last processed value query %q: %w", query, err)
+	}
+
+	for rows.Next() {
+		if err = rows.Scan(&s.lastProcessedVal); err != nil {
+			return fmt.Errorf("scan last processed value: %w", err)
+		}
+	}
+
+	return nil
 }

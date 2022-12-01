@@ -182,13 +182,17 @@ func (iter *Iterator) hasNext(ctx context.Context) (bool, error) {
 // selects a batch of rows from a database, based on the
 // table, columns, orderingColumn, batchSize and the current position.
 func (iter *Iterator) loadRows(ctx context.Context) error {
-	columns := "*"
+	var (
+		args        []any
+		whereClause string
+
+		columns = "*"
+	)
+
 	if len(iter.columns) > 0 {
 		columns = strings.Join(iter.columns, ",")
 	}
 
-	whereClause := ""
-	args := make([]any, 0, 1)
 	if iter.lastProcessedVal != nil {
 		whereClause = fmt.Sprintf(whereClauseFmt, iter.orderingColumn)
 		args = append(args, iter.lastProcessedVal)
@@ -206,8 +210,9 @@ func (iter *Iterator) loadRows(ctx context.Context) error {
 	return nil
 }
 
-// populates keyColumn from the database's metadata
-// or from the orderingColumn configuration field.
+// populateKeyColumns populates keyColumns field if it's empty.
+// It populates with the primary keys of the table, if they exist,
+// or with the orderingColumn.
 func (iter *Iterator) populateKeyColumns(ctx context.Context) error {
 	if len(iter.keyColumns) != 0 {
 		return nil
@@ -215,7 +220,7 @@ func (iter *Iterator) populateKeyColumns(ctx context.Context) error {
 
 	rows, err := iter.db.QueryxContext(ctx, querySelectPKs, iter.table, iter.database)
 	if err != nil {
-		return fmt.Errorf("select primary keys: %w", err)
+		return fmt.Errorf("execute select primary keys query: %w", err)
 	}
 	defer rows.Close()
 
