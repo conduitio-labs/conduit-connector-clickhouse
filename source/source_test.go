@@ -164,5 +164,5 @@ func TestSource_Teardown_fail(t *testing.T) {
 	}
 
 	err := s.Teardown(context.Background())
-	is.Equal(err.Error(), "some error")
+	is.Equal(err.Error(), "stop iterator: some error")
 }
