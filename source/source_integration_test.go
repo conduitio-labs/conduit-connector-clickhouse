@@ -33,6 +33,7 @@ import (
 	"github.com/matryer/is"
 )
 
+// envNameURL is a ClickHouse url environment name.
 const envNameURL = "CLICKHOUSE_URL"
 
 func TestSource_Read_tableDoesNotExist(t *testing.T) {
@@ -609,7 +610,7 @@ func TestSource_Read_snapshotIsFalse(t *testing.T) {
 func getURL(t *testing.T) string {
 	url := os.Getenv(envNameURL)
 	if url == "" {
-		t.Skip("CLICKHOUSE_URL env var must be set")
+		t.Skipf("%s env var must be set", envNameURL)
 
 		return ""
 	}
