@@ -221,7 +221,7 @@ func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
 	return nil
 }
 
-// returns either the record metadata value for the table
+// getTableName returns either the record metadata value for the table
 // or the default configured value for the table.
 func (w *Writer) getTableName(metadata map[string]string) string {
 	tableName, ok := metadata[metadataFieldTable]
@@ -232,7 +232,7 @@ func (w *Writer) getTableName(metadata map[string]string) string {
 	return tableName
 }
 
-// returns either all the keys of the sdk.Record's Key field.
+// getKeyColumns returns either all the keys of the sdk.Record's Key field.
 func (w *Writer) getKeyColumns(key sdk.StructuredData) ([]string, error) {
 	if len(key) == 0 {
 		return nil, ErrNoKey
@@ -246,7 +246,7 @@ func (w *Writer) getKeyColumns(key sdk.StructuredData) ([]string, error) {
 	return keyColumns, nil
 }
 
-// converts sdk.Data to sdk.StructuredData.
+// structurizeData converts sdk.Data to sdk.StructuredData.
 func (w *Writer) structurizeData(data sdk.Data) (sdk.StructuredData, error) {
 	if data == nil || len(data.Bytes()) == 0 {
 		return nil, nil
@@ -260,7 +260,7 @@ func (w *Writer) structurizeData(data sdk.Data) (sdk.StructuredData, error) {
 	return structuredData, nil
 }
 
-// turns the payload into slices of columns and values for inserting into ClickHouse.
+// extractColumnsAndValues turns the payload into slices of columns and values for inserting into ClickHouse.
 func (w *Writer) extractColumnsAndValues(payload sdk.StructuredData) ([]string, []any) {
 	var (
 		columns []string

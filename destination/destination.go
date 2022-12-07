@@ -172,6 +172,7 @@ func (d *Destination) Teardown(ctx context.Context) error {
 	return nil
 }
 
+// checkSupportMutations checks that the table engine supports update or delete operations.
 func (d *Destination) checkSupportMutations(ctx context.Context) (bool, error) {
 	options, err := clickhouse.ParseDSN(d.config.URL)
 	if err != nil {
