@@ -25,6 +25,9 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// driverName is a database driver name.
+const driverName = "clickhouse"
+
 type engineName string
 
 const (
@@ -109,14 +112,9 @@ func (d *Destination) Configure(ctx context.Context, cfg map[string]string) (err
 func (d *Destination) Open(ctx context.Context) (err error) {
 	sdk.Logger(ctx).Info().Msg("Opening a ClickHouse Destination...")
 
-	db, err := sqlx.Open("clickhouse", d.config.URL)
+	db, err := sqlx.Open(driverName, d.config.URL)
 	if err != nil {
 		return fmt.Errorf("open connection: %w", err)
-	}
-
-	err = db.Ping()
-	if err != nil {
-		return fmt.Errorf("ping: %w", err)
 	}
 
 	d.db = db

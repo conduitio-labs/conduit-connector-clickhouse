@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	// metadata key with the name of the table.
-	metadataTable = "clickhouse.table"
+	// metadataFieldTable is a name of a record metadata field that stores a ClickHouse table name.
+	metadataFieldTable = "clickhouse.table"
 
 	// query templates to generate queries manually.
 	// SQL-builders are not used because ClickHouse does not have its own,
@@ -224,7 +224,7 @@ func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
 // returns either the record metadata value for the table
 // or the default configured value for the table.
 func (w *Writer) getTableName(metadata map[string]string) string {
-	tableName, ok := metadata[metadataTable]
+	tableName, ok := metadata[metadataFieldTable]
 	if !ok {
 		return w.table
 	}
