@@ -75,12 +75,6 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 			Required:    false,
 			Description: "Whether the connector will take a snapshot of the entire table before starting cdc mode.",
 		},
-		config.Columns: {
-			Default:  "",
-			Required: false,
-			Description: "Comma-separated list of column names that should be included in each payload of the " +
-				"sdk.Record. By default includes all columns.",
-		},
 		config.BatchSize: {
 			Default:     "1000",
 			Required:    false,

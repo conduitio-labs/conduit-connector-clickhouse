@@ -124,7 +124,6 @@ func TestParseSource(t *testing.T) {
 				URL:            testURL,
 				Table:          testTable,
 				OrderingColumn: "id",
-				Columns:        "id",
 			},
 			want: Source{
 				Configuration: Configuration{
@@ -134,7 +133,6 @@ func TestParseSource(t *testing.T) {
 				OrderingColumn: "id",
 				Snapshot:       defaultSnapshot,
 				BatchSize:      defaultBatchSize,
-				Columns:        []string{"id"},
 			},
 		},
 		{
@@ -143,7 +141,6 @@ func TestParseSource(t *testing.T) {
 				URL:            testURL,
 				Table:          testTable,
 				OrderingColumn: "id",
-				Columns:        "id,name",
 			},
 			want: Source{
 				Configuration: Configuration{
@@ -153,7 +150,6 @@ func TestParseSource(t *testing.T) {
 				OrderingColumn: "id",
 				Snapshot:       defaultSnapshot,
 				BatchSize:      defaultBatchSize,
-				Columns:        []string{"id", "name"},
 			},
 		},
 		{
@@ -162,7 +158,6 @@ func TestParseSource(t *testing.T) {
 				URL:            testURL,
 				Table:          testTable,
 				OrderingColumn: "id",
-				Columns:        "id, name",
 			},
 			want: Source{
 				Configuration: Configuration{
@@ -172,7 +167,6 @@ func TestParseSource(t *testing.T) {
 				OrderingColumn: "id",
 				Snapshot:       defaultSnapshot,
 				BatchSize:      defaultBatchSize,
-				Columns:        []string{"id", "name"},
 			},
 		},
 		{
@@ -181,7 +175,6 @@ func TestParseSource(t *testing.T) {
 				URL:            testURL,
 				Table:          testTable,
 				OrderingColumn: "id",
-				Columns:        "id,name ",
 			},
 			want: Source{
 				Configuration: Configuration{
@@ -191,7 +184,6 @@ func TestParseSource(t *testing.T) {
 				OrderingColumn: "id",
 				Snapshot:       defaultSnapshot,
 				BatchSize:      defaultBatchSize,
-				Columns:        []string{"id", "name"},
 			},
 		},
 		{
@@ -200,7 +192,6 @@ func TestParseSource(t *testing.T) {
 				URL:            testURL,
 				Table:          testTable,
 				OrderingColumn: "id",
-				Columns:        " id,name",
 			},
 			want: Source{
 				Configuration: Configuration{
@@ -210,7 +201,6 @@ func TestParseSource(t *testing.T) {
 				OrderingColumn: "id",
 				Snapshot:       defaultSnapshot,
 				BatchSize:      defaultBatchSize,
-				Columns:        []string{"id", "name"},
 			},
 		},
 		{
@@ -219,7 +209,6 @@ func TestParseSource(t *testing.T) {
 				URL:            testURL,
 				Table:          testTable,
 				OrderingColumn: "id",
-				Columns:        "id ,name",
 			},
 			want: Source{
 				Configuration: Configuration{
@@ -229,7 +218,6 @@ func TestParseSource(t *testing.T) {
 				OrderingColumn: "id",
 				Snapshot:       defaultSnapshot,
 				BatchSize:      defaultBatchSize,
-				Columns:        []string{"id", "name"},
 			},
 		},
 		{
@@ -238,7 +226,6 @@ func TestParseSource(t *testing.T) {
 				URL:            testURL,
 				Table:          testTable,
 				OrderingColumn: "id",
-				Columns:        "id,  name",
 			},
 			want: Source{
 				Configuration: Configuration{
@@ -248,15 +235,13 @@ func TestParseSource(t *testing.T) {
 				OrderingColumn: "id",
 				Snapshot:       defaultSnapshot,
 				BatchSize:      defaultBatchSize,
-				Columns:        []string{"id", "name"},
 			},
 		},
 		{
 			name: "failure_required_orderingColumn",
 			in: map[string]string{
-				URL:     testURL,
-				Table:   testTable,
-				Columns: "id,name,age",
+				URL:   testURL,
+				Table: testTable,
 			},
 			err: fmt.Errorf("%q must be set", OrderingColumn),
 		},
@@ -279,27 +264,6 @@ func TestParseSource(t *testing.T) {
 				BatchSize:      "a",
 			},
 			err: fmt.Errorf(`invalid %q: strconv.Atoi: parsing "a": invalid syntax`, BatchSize),
-		},
-		{
-			name: "failure_missed_orderingColumn_in_columns",
-			in: map[string]string{
-				URL:            testURL,
-				Table:          testTable,
-				OrderingColumn: "id",
-				Columns:        "name,age",
-			},
-			err: fmt.Errorf("columns must include %q", OrderingColumn),
-		},
-		{
-			name: "failure_missed_keyColumn_in_columns",
-			in: map[string]string{
-				URL:            testURL,
-				Table:          testTable,
-				OrderingColumn: "id",
-				KeyColumns:     "name",
-				Columns:        "id,age",
-			},
-			err: fmt.Errorf("columns must include all %q", KeyColumns),
 		},
 		{
 			name: "failure_batchSize_is_too_big",
@@ -330,26 +294,6 @@ func TestParseSource(t *testing.T) {
 				BatchSize:      "-1",
 			},
 			err: fmt.Errorf("%w", fmt.Errorf("%q is out of range", BatchSize)),
-		},
-		{
-			name: "failure_columns_ends_with_comma",
-			in: map[string]string{
-				URL:            testURL,
-				Table:          testTable,
-				OrderingColumn: "id",
-				Columns:        "id,name,",
-			},
-			err: fmt.Errorf("invalid %q", Columns),
-		},
-		{
-			name: "failure_columns_starts_with_comma",
-			in: map[string]string{
-				URL:            testURL,
-				Table:          testTable,
-				OrderingColumn: "id",
-				Columns:        ",id,name",
-			},
-			err: fmt.Errorf("invalid %q", Columns),
 		},
 	}
 

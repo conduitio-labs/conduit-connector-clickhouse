@@ -17,7 +17,6 @@ package config
 import (
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 const (
@@ -25,8 +24,6 @@ const (
 	OrderingColumn = "orderingColumn"
 	// Snapshot is the configuration name for the Snapshot field.
 	Snapshot = "snapshot"
-	// Columns is the config name for a list of columns, separated by commas.
-	Columns = "columns"
 	// BatchSize is the config name for a batch size.
 	BatchSize = "batchSize"
 
@@ -45,8 +42,6 @@ type Source struct {
 	// Snapshot is the configuration that determines whether the connector
 	// will take a snapshot of the entire table before starting cdc mode.
 	Snapshot bool
-	// Columns list of column names that should be included in each Record's payload.
-	Columns []string
 	// BatchSize is a size of rows batch.
 	BatchSize int `validate:"gte=1,lte=100000"`
 }
@@ -74,17 +69,6 @@ func ParseSource(cfg map[string]string) (Source, error) {
 		sourceConfig.Snapshot = snapshot
 	}
 
-	if cfg[Columns] != "" {
-		columnsSl := strings.Split(strings.ReplaceAll(cfg[Columns], " ", ""), ",")
-		for i := range columnsSl {
-			if columnsSl[i] == "" {
-				return Source{}, fmt.Errorf("invalid %q", Columns)
-			}
-
-			sourceConfig.Columns = append(sourceConfig.Columns, columnsSl[i])
-		}
-	}
-
 	if cfg[BatchSize] != "" {
 		sourceConfig.BatchSize, err = strconv.Atoi(cfg[BatchSize])
 		if err != nil {
@@ -95,25 +79,6 @@ func ParseSource(cfg map[string]string) (Source, error) {
 	err = validate(sourceConfig)
 	if err != nil {
 		return Source{}, err
-	}
-
-	if len(sourceConfig.Columns) == 0 {
-		return sourceConfig, nil
-	}
-
-	columnsMap := make(map[string]struct{}, len(sourceConfig.Columns))
-	for i := 0; i < len(sourceConfig.Columns); i++ {
-		columnsMap[sourceConfig.Columns[i]] = struct{}{}
-	}
-
-	if _, ok := columnsMap[sourceConfig.OrderingColumn]; !ok {
-		return Source{}, fmt.Errorf("columns must include %q", OrderingColumn)
-	}
-
-	for i := range sourceConfig.KeyColumns {
-		if _, ok := columnsMap[sourceConfig.KeyColumns[i]]; !ok {
-			return Source{}, fmt.Errorf("columns must include all %q", KeyColumns)
-		}
 	}
 
 	return sourceConfig, nil
