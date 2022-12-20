@@ -43,9 +43,6 @@ type Iterator struct {
 	keyColumns []string
 	// name of the column that iterator will use for sorting data
 	orderingColumn string
-	// list of table's columns for record payload.
-	// if empty - will get all columns
-	columns []string
 	// size of batch
 	batchSize int
 }
@@ -208,10 +205,6 @@ func (iter *Iterator) loadRows(ctx context.Context) error {
 		From(iter.table).
 		OrderBy(iter.orderingColumn).
 		Limit(iter.batchSize)
-
-	if len(iter.columns) > 0 {
-		sb.Select(iter.columns...)
-	}
 
 	if iter.position.LastProcessedValue != nil {
 		sb.Where(sb.GreaterThan(iter.orderingColumn, iter.position.LastProcessedValue))
