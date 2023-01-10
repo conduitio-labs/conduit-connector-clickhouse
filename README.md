@@ -59,7 +59,6 @@ configuration.
 | `table`          | Name of the table that the connector should read.                                                                                                                   | **true** | `table_name`                                   |
 | `orderingColumn` | Column name that the connector will use for ordering rows. Column must contain unique values and suitable for sorting, otherwise the snapshot won't work correctly. | **true** | `id`                                           |
 | `keyColumns`     | Comma-separated list of column names to build the `sdk.Record.Key`. See more: [key handling](#key-handling).                                                        | false    | `id,name`                                      |
-| `columns`        | Comma-separated list of column names that should be included in each payload of the `sdk.Record`. By default includes all columns.                                  | false    | `id,name,age`                                  |
 | `batchSize`      | Size of rows batch. Min is 1 and max is 100000. The default is 1000.                                                                                                | false    | `100`                                          |
 
 #### Key handling

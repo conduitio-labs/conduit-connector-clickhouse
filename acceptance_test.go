@@ -29,6 +29,15 @@ import (
 	"github.com/matryer/is"
 )
 
+const (
+	// driverName is a database driver name.
+	driverName = "clickhouse"
+	// envNameURL is a ClickHouse url environment name.
+	envNameURL = "CLICKHOUSE_URL"
+	// metadataFieldTable is a name of a record metadata field that stores a ClickHouse table name.
+	metadataFieldTable = "clickhouse.table"
+)
+
 type driver struct {
 	sdk.ConfigurableAcceptanceTestDriver
 
@@ -43,7 +52,7 @@ func (d *driver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Recor
 		Position:  nil,
 		Operation: operation,
 		Metadata: map[string]string{
-			"clickhouse.table": d.Config.SourceConfig[config.Table],
+			metadataFieldTable: d.Config.SourceConfig[config.Table],
 		},
 		Key: sdk.StructuredData{
 			"Int32Type": d.id,
@@ -81,9 +90,9 @@ func TestAcceptance(t *testing.T) {
 // prepareConfig receives the connection URL from the environment variable
 // and prepares configuration map.
 func prepareConfig(t *testing.T) map[string]string {
-	url := os.Getenv("CLICKHOUSE_URL")
+	url := os.Getenv(envNameURL)
 	if url == "" {
-		t.Skip("CLICKHOUSE_URL env var must be set")
+		t.Skipf("%s env var must be set", envNameURL)
 
 		return nil
 	}
@@ -98,7 +107,7 @@ func prepareConfig(t *testing.T) map[string]string {
 
 // createTable creates test table.
 func createTable(url, table string) error {
-	db, err := sqlx.Open("clickhouse", url)
+	db, err := sqlx.Open(driverName, url)
 	if err != nil {
 		return fmt.Errorf("open connection: %w", err)
 	}
@@ -119,7 +128,7 @@ func createTable(url, table string) error {
 
 // dropTables drops test table and tracking test table if exists.
 func dropTables(url, table string) error {
-	db, err := sqlx.Open("clickhouse", url)
+	db, err := sqlx.Open(driverName, url)
 	if err != nil {
 		return fmt.Errorf("open connection: %w", err)
 	}

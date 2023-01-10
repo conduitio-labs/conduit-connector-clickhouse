@@ -74,7 +74,6 @@ func getKeyName(fieldName string) string {
 		"Table":          Table,
 		"KeyColumns":     KeyColumns,
 		"OrderingColumn": OrderingColumn,
-		"Columns":        Columns,
 		"BatchSize":      BatchSize,
 	}[fieldName]
 }

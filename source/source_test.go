@@ -50,6 +50,7 @@ func TestSource_Configure(t *testing.T) {
 			KeyColumns: []string{"id"},
 		},
 		OrderingColumn: "created_at",
+		Snapshot:       true,
 		BatchSize:      1000,
 	})
 }
@@ -163,5 +164,5 @@ func TestSource_Teardown_fail(t *testing.T) {
 	}
 
 	err := s.Teardown(context.Background())
-	is.Equal(err.Error(), "some error")
+	is.Equal(err.Error(), "stop iterator: some error")
 }
