@@ -1,6 +1,6 @@
 module github.com/conduitio-labs/conduit-connector-clickhouse
 
-go 1.18
+go 1.20
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.7.0
@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/matryer/is v1.4.1
-	go.uber.org/multierr v1.9.0
+	go.uber.org/multierr v1.10.0
 )
 
 require (
@@ -52,7 +52,6 @@ require (
 	go.buf.build/grpc/go/conduitio/conduit-connector-protocol v1.4.5 // indirect
 	go.opentelemetry.io/otel v1.13.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
-	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/exp v0.0.0-20221114191408-850992195362 // indirect

@@ -54,6 +54,7 @@ func getColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[str
 	if err != nil {
 		return nil, fmt.Errorf("query column types: %w", err)
 	}
+	defer rows.Close()
 
 	columnTypes := make(map[string]string)
 	for rows.Next() {
@@ -62,6 +63,9 @@ func getColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[str
 		}
 
 		columnTypes[dest[colName].(string)] = dest[colType].(string)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate over rows: %w", err)
 	}
 
 	return columnTypes, nil
