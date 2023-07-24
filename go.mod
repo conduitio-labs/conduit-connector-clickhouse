@@ -3,7 +3,7 @@ module github.com/conduitio-labs/conduit-connector-clickhouse
 go 1.20
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.10.1
+	github.com/ClickHouse/clickhouse-go/v2 v2.11.0
 	github.com/conduitio/conduit-connector-sdk v0.7.0
 	github.com/go-playground/validator/v10 v10.14.1
 	github.com/golang/mock v1.6.0
@@ -50,8 +50,8 @@ require (
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	go.opentelemetry.io/otel v1.13.0 // indirect
-	go.opentelemetry.io/otel/trace v1.13.0 // indirect
+	go.opentelemetry.io/otel v1.16.0 // indirect
+	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/exp v0.0.0-20221114191408-850992195362 // indirect
