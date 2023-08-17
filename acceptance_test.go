@@ -45,7 +45,7 @@ type driver struct {
 }
 
 // GenerateRecord generates a random sdk.Record.
-func (d *driver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Record {
+func (d *driver) GenerateRecord(_ *testing.T, operation sdk.Operation) sdk.Record {
 	atomic.AddInt32(&d.id, 1)
 
 	return sdk.Record{
@@ -102,6 +102,8 @@ func prepareConfig(t *testing.T) map[string]string {
 		config.Table:          fmt.Sprintf("CONDUIT_TEST_%s", randString(6)),
 		config.KeyColumns:     "Int32Type",
 		config.OrderingColumn: "Int32Type",
+		config.Snapshot:       "true",
+		config.BatchSize:      "1000",
 	}
 }
 

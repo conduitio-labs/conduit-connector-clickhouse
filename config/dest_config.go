@@ -1,4 +1,4 @@
-// Copyright © 2022 Meroxa, Inc. & Yalantis
+// Copyright © 2023 Meroxa, Inc. & Yalantis
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,9 @@
 
 package config
 
-import (
-	"fmt"
-)
+//go:generate paramgen -output=paramgen_dest.go DestConfig
 
-// Destination is a destination configuration needed to connect to ClickHouse database.
-type Destination struct {
-	Configuration
-}
-
-// ParseDestination parses a destination configuration.
-func ParseDestination(cfg map[string]string) (Destination, error) {
-	config, err := parseConfiguration(cfg)
-	if err != nil {
-		return Destination{}, fmt.Errorf("parse config: %w", err)
-	}
-
-	destinationConfig := Destination{
-		Configuration: config,
-	}
-
-	return destinationConfig, nil
+// DestConfig is a destination configuration needed to connect to ClickHouse database.
+type DestConfig struct {
+	Config
 }

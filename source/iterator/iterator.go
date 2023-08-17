@@ -48,7 +48,7 @@ type Iterator struct {
 }
 
 // New creates a new instance of the iterator.
-func New(ctx context.Context, driverName string, pos *Position, config config.Source) (*Iterator, error) {
+func New(ctx context.Context, driverName string, pos *Position, config config.SourceConfig) (*Iterator, error) {
 	var err error
 
 	iterator := &Iterator{
@@ -128,7 +128,7 @@ func (iter *Iterator) HasNext(ctx context.Context) (bool, error) {
 }
 
 // Next returns the next record.
-func (iter *Iterator) Next(ctx context.Context) (sdk.Record, error) {
+func (iter *Iterator) Next(context.Context) (sdk.Record, error) {
 	row := make(map[string]any)
 	if err := iter.rows.MapScan(row); err != nil {
 		return sdk.Record{}, fmt.Errorf("scan rows: %w", err)
@@ -285,6 +285,7 @@ func (iter *Iterator) latestSnapshotValue(ctx context.Context) (any, error) {
 	if err != nil {
 		return nil, fmt.Errorf("execute select latest snapshot value query %q: %w", query, err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		if err = rows.Scan(&latestSnapshotValue); err != nil {

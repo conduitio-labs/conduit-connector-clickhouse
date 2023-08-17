@@ -394,6 +394,8 @@ func TestSource_Read_keyColumnsFromConfig(t *testing.T) {
 			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 			config.OrderingColumn: "Int32Type2",
 			config.KeyColumns:     "Int32Type0",
+			config.Snapshot:       "true",
+			config.BatchSize:      "1000",
 		}
 	)
 
@@ -446,6 +448,8 @@ func TestSource_Read_keyColumnsFromTableMetadata(t *testing.T) {
 			config.URL:            getURL(t),
 			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 			config.OrderingColumn: "Int32Type2",
+			config.Snapshot:       "true",
+			config.BatchSize:      "1000",
 		}
 	)
 
@@ -498,6 +502,8 @@ func TestSource_Read_keyColumnsFromOrderingColumn(t *testing.T) {
 			config.URL:            getURL(t),
 			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 			config.OrderingColumn: "Int32Type1",
+			config.Snapshot:       "true",
+			config.BatchSize:      "1000",
 		}
 	)
 
@@ -549,6 +555,8 @@ func TestSource_Read_snapshotIsFalse(t *testing.T) {
 			config.URL:            getURL(t),
 			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 			config.OrderingColumn: "Int32Type1",
+			config.Snapshot:       "true",
+			config.BatchSize:      "1000",
 		}
 	)
 
@@ -624,6 +632,8 @@ func prepareConfig(t *testing.T, keyColumns []string, orderingColumn string) map
 		config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 		config.KeyColumns:     strings.Join(keyColumns, ","),
 		config.OrderingColumn: orderingColumn,
+		config.Snapshot:       "true",
+		config.BatchSize:      "1000",
 	}
 }
 

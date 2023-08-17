@@ -37,7 +37,7 @@ type Iterator interface {
 type Source struct {
 	sdk.UnimplementedSource
 
-	config   config.Source
+	config   config.SourceConfig
 	iterator Iterator
 }
 
@@ -48,52 +48,20 @@ func NewSource() sdk.Source {
 
 // Parameters returns a map of named Parameters that describe how to configure the Source.
 func (s *Source) Parameters() map[string]sdk.Parameter {
-	return map[string]sdk.Parameter{
-		config.URL: {
-			Default:     "",
-			Required:    true,
-			Description: "DSN to connect to the database.",
-		},
-		config.Table: {
-			Default:     "",
-			Required:    true,
-			Description: "Name of the table that the connector should read.",
-		},
-		config.OrderingColumn: {
-			Default:  "",
-			Required: true,
-			Description: "Column name that the connector will use for ordering rows. Column must contain unique " +
-				"values and suitable for sorting, otherwise the snapshot won't work correctly.",
-		},
-		config.KeyColumns: {
-			Default:     "",
-			Required:    false,
-			Description: "Comma-separated list of column names to build the sdk.Record.Key.",
-		},
-		config.Snapshot: {
-			Default:     "true",
-			Required:    false,
-			Description: "Whether the connector will take a snapshot of the entire table before starting cdc mode.",
-		},
-		config.BatchSize: {
-			Default:     "1000",
-			Required:    false,
-			Description: "Size of rows batch. Min is 1 and max is 100000. The default is 1000.",
-		},
-	}
+	return s.config.Parameters()
 }
 
 // Configure parses and stores configurations,
 // returns an error in case of invalid configuration.
-func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error {
+func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 	sdk.Logger(ctx).Info().Msg("Configuring ClickHouse Source...")
 
-	var err error
-
-	s.config, err = config.ParseSource(cfgRaw)
+	var config config.SourceConfig
+	err := sdk.Util.ParseConfig(cfg, &config)
 	if err != nil {
-		return fmt.Errorf("parse source config: %w", err)
+		return err
 	}
+	s.config = config
 
 	return nil
 }

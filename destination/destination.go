@@ -65,7 +65,7 @@ type Writer interface {
 type Destination struct {
 	sdk.UnimplementedDestination
 
-	config config.Destination
+	config config.DestConfig
 	db     *sqlx.DB
 	writer Writer
 }
@@ -75,35 +75,21 @@ func NewDestination() sdk.Destination {
 	return sdk.DestinationWithMiddleware(&Destination{}, sdk.DefaultDestinationMiddleware()...)
 }
 
-// Parameters returns a map of named Parameters that describe how to configure the Source.
+// Parameters returns a map of named Parameters that describe how to configure the SourceConfig.
 func (d *Destination) Parameters() map[string]sdk.Parameter {
-	return map[string]sdk.Parameter{
-		config.URL: {
-			Default:     "",
-			Required:    true,
-			Description: "DSN to connect to the database.",
-		},
-		config.Table: {
-			Default:     "",
-			Required:    true,
-			Description: "Name of the table that the connector should write to.",
-		},
-		config.KeyColumns: {
-			Default:     "",
-			Required:    false,
-			Description: "Comma-separated list of column names for key handling.",
-		},
-	}
+	return d.config.Parameters()
 }
 
 // Configure parses and stores configurations, returns an error in case of invalid configuration.
-func (d *Destination) Configure(ctx context.Context, cfg map[string]string) (err error) {
-	sdk.Logger(ctx).Info().Msg("Configuring ClickHouse Destination...")
+func (d *Destination) Configure(ctx context.Context, cfg map[string]string) error {
+	sdk.Logger(ctx).Info().Msg("Configuring ClickHouse DestConfig...")
 
-	d.config, err = config.ParseDestination(cfg)
+	var destConfig config.DestConfig
+	err := sdk.Util.ParseConfig(cfg, &destConfig)
 	if err != nil {
-		return fmt.Errorf("parse destination config: %w", err)
+		return err
 	}
+	d.config = destConfig
 
 	return nil
 }
