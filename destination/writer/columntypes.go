@@ -46,7 +46,7 @@ var timeLayouts = []string{time.RFC3339, time.RFC3339Nano, time.Layout, time.ANS
 	time.RFC822, time.RFC822Z, time.RFC850, time.RFC1123, time.RFC1123Z, time.RFC3339, time.RFC3339,
 	time.RFC3339Nano, time.Kitchen, time.Stamp, time.StampMilli, time.StampMicro, time.StampNano}
 
-// returns a map containing the names and types of the table columns.
+// getColumnTypes returns a map containing the names and types of the table columns.
 func getColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[string]string, error) {
 	dest := make(map[string]any)
 
@@ -71,7 +71,7 @@ func getColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[str
 	return columnTypes, nil
 }
 
-// converts a [sdk.StructureData] values to a proper database types.
+// convertStructureData converts a [sdk.StructureData] values to a proper database types.
 func convertStructureData(
 	columnTypes map[string]string,
 	data sdk.StructuredData,

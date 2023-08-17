@@ -19,46 +19,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/mock"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/writer"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/golang/mock/gomock"
 	"github.com/matryer/is"
 )
-
-const (
-	testURL   = "http://username:password@host1:8123/database"
-	testTable = "test_table"
-)
-
-func TestDestination_Configure_Success(t *testing.T) {
-	t.Parallel()
-
-	is := is.New(t)
-
-	d := NewDestination()
-
-	err := d.Configure(context.Background(), map[string]string{
-		config.URL:   testURL,
-		config.Table: testTable,
-	})
-	is.NoErr(err)
-}
-
-func TestDestination_Configure_Fail(t *testing.T) {
-	t.Parallel()
-
-	is := is.New(t)
-
-	d := NewDestination()
-
-	err := d.Configure(context.Background(), map[string]string{
-		config.URL: testURL,
-	})
-	is.Equal(err.Error(),
-		`parse destination config: parse config: validate config: "table" must be set`)
-}
 
 func TestDestination_Write_Success(t *testing.T) {
 	t.Parallel()

@@ -16,16 +16,15 @@ package source
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/source/iterator"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/jmoiron/sqlx"
-	"go.uber.org/multierr"
 )
+
+// driverName is a database driver name.
+const driverName = "clickhouse"
 
 // Iterator interface.
 type Iterator interface {
@@ -38,8 +37,7 @@ type Iterator interface {
 type Source struct {
 	sdk.UnimplementedSource
 
-	config   config.Source
-	db       *sqlx.DB
+	config   config.SourceConfig
 	iterator Iterator
 }
 
@@ -50,96 +48,34 @@ func NewSource() sdk.Source {
 
 // Parameters returns a map of named Parameters that describe how to configure the Source.
 func (s *Source) Parameters() map[string]sdk.Parameter {
-	return map[string]sdk.Parameter{
-		config.URL: {
-			Default:     "",
-			Required:    true,
-			Description: "DSN to connect to the database.",
-		},
-		config.Table: {
-			Default:     "",
-			Required:    true,
-			Description: "Name of the table that the connector should read.",
-		},
-		config.OrderingColumn: {
-			Default:  "",
-			Required: true,
-			Description: "Column name that the connector will use for ordering rows. Column must contain unique " +
-				"values and suitable for sorting, otherwise the snapshot won't work correctly.",
-		},
-		config.KeyColumns: {
-			Default:     "",
-			Required:    false,
-			Description: "Comma-separated list of column names to build the sdk.Record.Key.",
-		},
-		config.Columns: {
-			Default:  "",
-			Required: false,
-			Description: "Comma-separated list of column names that should be included in each payload of the " +
-				"sdk.Record. By default includes all columns.",
-		},
-		config.BatchSize: {
-			Default:     "1000",
-			Required:    false,
-			Description: "Size of rows batch. Min is 1 and max is 100000. The default is 1000.",
-		},
-	}
+	return s.config.Parameters()
 }
 
 // Configure parses and stores configurations,
 // returns an error in case of invalid configuration.
-func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error {
+func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 	sdk.Logger(ctx).Info().Msg("Configuring ClickHouse Source...")
 
-	cfg, err := config.ParseSource(cfgRaw)
+	var config config.SourceConfig
+	err := sdk.Util.ParseConfig(cfg, &config)
 	if err != nil {
-		return fmt.Errorf("parse source config: %w", err)
+		return err
 	}
-
-	s.config = cfg
+	s.config = config
 
 	return nil
 }
 
-// Open prepare the plugin to start sending records from the given position.
+// Open parses the position and initializes the iterator.
 func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 	sdk.Logger(ctx).Info().Msg("Opening a ClickHouse Source...")
 
-	var lastProcessedVal any
-
-	if position != nil {
-		if err := json.Unmarshal(position, &lastProcessedVal); err != nil {
-			return fmt.Errorf("unmarshal sdk.Position into Position: %w", err)
-		}
-	}
-
-	db, err := sqlx.Open("clickhouse", s.config.URL)
+	pos, err := iterator.ParseSDKPosition(position)
 	if err != nil {
-		return fmt.Errorf("open db connection: %w", err)
+		return fmt.Errorf("parse position: %w", err)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		return fmt.Errorf("ping: %w", err)
-	}
-
-	s.db = db
-
-	options, err := clickhouse.ParseDSN(s.config.URL)
-	if err != nil {
-		return fmt.Errorf("parse dsn: %w", err)
-	}
-
-	s.iterator, err = iterator.New(ctx, iterator.Params{
-		DB:               db,
-		LastProcessedVal: lastProcessedVal,
-		Table:            s.config.Table,
-		KeyColumns:       s.config.KeyColumns,
-		OrderingColumn:   s.config.OrderingColumn,
-		Columns:          s.config.Columns,
-		BatchSize:        s.config.BatchSize,
-		Database:         options.Auth.Database,
-	})
+	s.iterator, err = iterator.New(ctx, driverName, pos, s.config)
 	if err != nil {
 		return fmt.Errorf("new iterator: %w", err)
 	}
@@ -168,7 +104,7 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 	return record, nil
 }
 
-// Ack appends the last processed value to the slice to clear the tracking table in the future.
+// Ack logs the debug event with the position.
 func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
 	sdk.Logger(ctx).Debug().Str("position", string(position)).Msg("got ack")
 
@@ -176,16 +112,14 @@ func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
 }
 
 // Teardown gracefully shutdown connector.
-func (s *Source) Teardown(ctx context.Context) (err error) {
+func (s *Source) Teardown(ctx context.Context) error {
 	sdk.Logger(ctx).Info().Msg("Tearing down the ClickHouse Source")
 
 	if s.iterator != nil {
-		err = s.iterator.Stop()
+		if err := s.iterator.Stop(); err != nil {
+			return fmt.Errorf("stop iterator: %w", err)
+		}
 	}
 
-	if s.db != nil {
-		err = multierr.Append(err, s.db.Close())
-	}
-
-	return
+	return nil
 }

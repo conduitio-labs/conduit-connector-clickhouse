@@ -18,80 +18,73 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
+	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/huandu/go-sqlbuilder"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/multierr"
 )
 
-// metadata related.
-const (
-	metadataTable = "clickhouse.table"
-
-	querySelectRowsFmt = "SELECT %s FROM %s%s ORDER BY %s ASC LIMIT %d;"
-	whereClauseFmt     = " WHERE %s > ?"
-
-	querySelectPKs = `
-SELECT 
-  name 
-FROM 
-  system.columns 
-WHERE 
-  is_in_primary_key = 1 
-  AND table = ? 
-  AND database = ?;
-`
-)
+// metadataFieldTable is a name of a record metadata field that stores a ClickHouse table name.
+const metadataFieldTable = "clickhouse.table"
 
 // Iterator is an implementation of an iterator for ClickHouse.
 type Iterator struct {
-	db   *sqlx.DB
-	rows *sqlx.Rows
+	db       *sqlx.DB
+	rows     *sqlx.Rows
+	position *Position
 
-	// last processed orderingColumn value
-	lastProcessedVal any
 	// table name
 	table string
 	// name of the column that iterator will use for setting key in record
 	keyColumns []string
 	// name of the column that iterator will use for sorting data
 	orderingColumn string
-	// list of table's columns for record payload.
-	// if empty - will get all columns
-	columns []string
 	// size of batch
 	batchSize int
-	// database name
-	database string
-}
-
-// Params is an incoming iterator params for the New function.
-type Params struct {
-	DB               *sqlx.DB
-	LastProcessedVal any
-	Table            string
-	KeyColumns       []string
-	OrderingColumn   string
-	Columns          []string
-	BatchSize        int
-	Database         string
 }
 
 // New creates a new instance of the iterator.
-func New(ctx context.Context, params Params) (*Iterator, error) {
+func New(ctx context.Context, driverName string, pos *Position, config config.SourceConfig) (*Iterator, error) {
+	var err error
+
 	iterator := &Iterator{
-		db:               params.DB,
-		lastProcessedVal: params.LastProcessedVal,
-		table:            params.Table,
-		keyColumns:       params.KeyColumns,
-		orderingColumn:   params.OrderingColumn,
-		columns:          params.Columns,
-		batchSize:        params.BatchSize,
-		database:         params.Database,
+		position:       pos,
+		table:          config.Table,
+		keyColumns:     config.KeyColumns,
+		orderingColumn: config.OrderingColumn,
+		batchSize:      config.BatchSize,
 	}
 
-	err := iterator.populateKeyColumns(ctx)
+	iterator.db, err = sqlx.Open(driverName, config.URL)
+	if err != nil {
+		return nil, fmt.Errorf("open db connection: %w", err)
+	}
+
+	if iterator.position.LastProcessedValue == nil {
+		latestSnapshotValue, latestValErr := iterator.latestSnapshotValue(ctx)
+		if latestValErr != nil {
+			return nil, fmt.Errorf("get latest snapshot value: %w", latestValErr)
+		}
+
+		if config.Snapshot {
+			// set the LatestSnapshotValue to specify which record the snapshot iterator will work to
+			iterator.position.LatestSnapshotValue = latestSnapshotValue
+		} else {
+			// set the LastProcessedValue to skip a snapshot of the entire table
+			iterator.position.LastProcessedValue = latestSnapshotValue
+		}
+	}
+
+	options, err := clickhouse.ParseDSN(config.URL)
+	if err != nil {
+		return nil, fmt.Errorf("parse dsn: %w", err)
+	}
+
+	err = iterator.populateKeyColumns(ctx, options.Auth.Database)
 	if err != nil {
 		return nil, fmt.Errorf("populate key columns: %w", err)
 	}
@@ -106,11 +99,36 @@ func New(ctx context.Context, params Params) (*Iterator, error) {
 
 // HasNext returns a bool indicating whether the iterator has the next record to return or not.
 func (iter *Iterator) HasNext(ctx context.Context) (bool, error) {
-	return iter.hasNext(ctx)
+	if iter.rows != nil && iter.rows.Next() {
+		return true, nil
+	}
+
+	if err := iter.loadRows(ctx); err != nil {
+		return false, fmt.Errorf("load rows: %w", err)
+	}
+
+	if iter.rows.Next() {
+		return true, nil
+	}
+
+	if iter.position.LatestSnapshotValue != nil {
+		// switch to CDC mode
+		iter.position.LastProcessedValue = iter.position.LatestSnapshotValue
+		iter.position.LatestSnapshotValue = nil
+
+		// and load new rows
+		if err := iter.loadRows(ctx); err != nil {
+			return false, fmt.Errorf("load rows: %w", err)
+		}
+
+		return iter.rows.Next(), nil
+	}
+
+	return false, nil
 }
 
 // Next returns the next record.
-func (iter *Iterator) Next(ctx context.Context) (sdk.Record, error) {
+func (iter *Iterator) Next(context.Context) (sdk.Record, error) {
 	row := make(map[string]any)
 	if err := iter.rows.MapScan(row); err != nil {
 		return sdk.Record{}, fmt.Errorf("scan rows: %w", err)
@@ -137,64 +155,66 @@ func (iter *Iterator) Next(ctx context.Context) (sdk.Record, error) {
 
 	// set a new position into the variable,
 	// to avoid saving position into the struct until we marshal the position
-	positionBytes, err := json.Marshal(row[iter.orderingColumn])
+	position := *iter.position
+	// set the value from iter.orderingColumn column you chose
+	position.LastProcessedValue = row[iter.orderingColumn]
+
+	convertedPosition, err := position.marshal()
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("marshal position: %w", err)
+		return sdk.Record{}, fmt.Errorf("convert position :%w", err)
 	}
 
-	iter.lastProcessedVal = row[iter.orderingColumn]
+	iter.position = &position
 
 	metadata := sdk.Metadata{
-		metadataTable: iter.table,
+		metadataFieldTable: iter.table,
 	}
 	metadata.SetCreatedAt(time.Now())
 
-	return sdk.Util.Source.NewRecordCreate(
-		positionBytes,
-		metadata,
-		key,
-		sdk.RawData(rowBytes),
-	), nil
+	if position.LatestSnapshotValue != nil {
+		return sdk.Util.Source.NewRecordSnapshot(convertedPosition, metadata, key, sdk.RawData(rowBytes)), nil
+	}
+
+	return sdk.Util.Source.NewRecordCreate(convertedPosition, metadata, key, sdk.RawData(rowBytes)), nil
 }
 
 // Stop stops iterators and closes database connection.
-func (iter *Iterator) Stop() (err error) {
+func (iter *Iterator) Stop() error {
+	var err error
+
 	if iter.rows != nil {
-		return iter.rows.Close()
+		err = iter.rows.Close()
+	}
+
+	if iter.db != nil {
+		err = multierr.Append(err, iter.db.Close())
+	}
+
+	if err != nil {
+		return fmt.Errorf("close db rows and db: %w", err)
 	}
 
 	return nil
 }
 
-// returns a bool indicating whether the source has the next record to return or not.
-func (iter *Iterator) hasNext(ctx context.Context) (bool, error) {
-	if iter.rows != nil && iter.rows.Next() {
-		return true, nil
-	}
-
-	if err := iter.loadRows(ctx); err != nil {
-		return false, fmt.Errorf("load rows: %w", err)
-	}
-
-	return iter.rows.Next(), nil
-}
-
-// selects a batch of rows from a database, based on the
+// loadRows selects a batch of rows from a database, based on the
 // table, columns, orderingColumn, batchSize and the current position.
 func (iter *Iterator) loadRows(ctx context.Context) error {
-	columns := "*"
-	if len(iter.columns) > 0 {
-		columns = strings.Join(iter.columns, ",")
+	sb := sqlbuilder.NewSelectBuilder().
+		Select("*").
+		From(iter.table).
+		OrderBy(iter.orderingColumn).
+		Limit(iter.batchSize)
+
+	if iter.position.LastProcessedValue != nil {
+		sb.Where(sb.GreaterThan(iter.orderingColumn, iter.position.LastProcessedValue))
 	}
 
-	whereClause := ""
-	args := make([]any, 0, 1)
-	if iter.lastProcessedVal != nil {
-		whereClause = fmt.Sprintf(whereClauseFmt, iter.orderingColumn)
-		args = append(args, iter.lastProcessedVal)
+	if iter.position.LatestSnapshotValue != nil {
+		sb.Where(sb.LessEqualThan(iter.orderingColumn, iter.position.LatestSnapshotValue))
 	}
 
-	query := fmt.Sprintf(querySelectRowsFmt, columns, iter.table, whereClause, iter.orderingColumn, iter.batchSize)
+	query, args := sb.Build()
 
 	rows, err := iter.db.QueryxContext(ctx, query, args...)
 	if err != nil {
@@ -206,16 +226,29 @@ func (iter *Iterator) loadRows(ctx context.Context) error {
 	return nil
 }
 
-// populates keyColumn from the database's metadata
-// or from the orderingColumn configuration field.
-func (iter *Iterator) populateKeyColumns(ctx context.Context) error {
+// populateKeyColumns populates keyColumn from the database metadata
+// or from the orderingColumn configuration field in the described order if it's empty.
+func (iter *Iterator) populateKeyColumns(ctx context.Context, database string) error {
 	if len(iter.keyColumns) != 0 {
 		return nil
 	}
 
-	rows, err := iter.db.QueryxContext(ctx, querySelectPKs, iter.table, iter.database)
+	sb := sqlbuilder.NewSelectBuilder().
+		Select("name").
+		From("system.columns").
+		Where("is_in_primary_key = 1")
+
+	sb.Where(sb.Equal("table", iter.table))
+
+	if database != "" {
+		sb.Where(sb.Equal("database", database))
+	}
+
+	query, args := sb.Build()
+
+	rows, err := iter.db.QueryxContext(ctx, query, args...)
 	if err != nil {
-		return fmt.Errorf("select primary keys: %w", err)
+		return fmt.Errorf("execute select primary keys query %q, %v: %w", query, args, err)
 	}
 	defer rows.Close()
 
@@ -235,4 +268,30 @@ func (iter *Iterator) populateKeyColumns(ctx context.Context) error {
 	iter.keyColumns = []string{iter.orderingColumn}
 
 	return nil
+}
+
+// latestSnapshotValue returns most recent value of orderingColumn column.
+func (iter *Iterator) latestSnapshotValue(ctx context.Context) (any, error) {
+	var latestSnapshotValue any
+
+	query := sqlbuilder.NewSelectBuilder().
+		Select(iter.orderingColumn).
+		From(iter.table).
+		OrderBy(iter.orderingColumn).Desc().
+		Limit(1).
+		String()
+
+	rows, err := iter.db.QueryxContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("execute select latest snapshot value query %q: %w", query, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err = rows.Scan(&latestSnapshotValue); err != nil {
+			return nil, fmt.Errorf("scan latest snapshot value: %w", err)
+		}
+	}
+
+	return latestSnapshotValue, nil
 }

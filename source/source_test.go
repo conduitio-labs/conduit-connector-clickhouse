@@ -19,53 +19,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/source/mock"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/golang/mock/gomock"
 	"github.com/matryer/is"
 )
-
-const (
-	testURL   = "http://username:password@host1:8123/database"
-	testTable = "test_table"
-)
-
-func TestSource_Configure(t *testing.T) {
-	is := is.New(t)
-
-	s := Source{}
-
-	err := s.Configure(context.Background(), map[string]string{
-		config.URL:            testURL,
-		config.Table:          testTable,
-		config.KeyColumns:     "id",
-		config.OrderingColumn: "created_at",
-	})
-	is.NoErr(err)
-	is.Equal(s.config, config.Source{
-		Configuration: config.Configuration{
-			URL:        testURL,
-			Table:      testTable,
-			KeyColumns: []string{"id"},
-		},
-		OrderingColumn: "created_at",
-		BatchSize:      1000,
-	})
-}
-
-func TestSource_Configure_fail(t *testing.T) {
-	is := is.New(t)
-
-	s := Source{}
-
-	err := s.Configure(context.Background(), map[string]string{
-		config.URL:        testURL,
-		config.Table:      testTable,
-		config.KeyColumns: "id",
-	})
-	is.Equal(err.Error(), `parse source config: "orderingColumn" must be set`)
-}
 
 func TestSource_Read(t *testing.T) {
 	is := is.New(t)
@@ -163,5 +121,5 @@ func TestSource_Teardown_fail(t *testing.T) {
 	}
 
 	err := s.Teardown(context.Background())
-	is.Equal(err.Error(), "some error")
+	is.Equal(err.Error(), "stop iterator: some error")
 }

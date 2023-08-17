@@ -1,4 +1,4 @@
-.PHONY: build test
+.PHONY: build test lint dep mockgen
 
 VERSION=$(shell git describe --tags --dirty --always)
 

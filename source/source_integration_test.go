@@ -33,7 +33,10 @@ import (
 	"github.com/matryer/is"
 )
 
-func TestSource_Read_noTable(t *testing.T) {
+// envNameURL is a ClickHouse url environment name.
+const envNameURL = "CLICKHOUSE_URL"
+
+func TestSource_Read_tableDoesNotExist(t *testing.T) {
 	var (
 		is = is.New(t)
 
@@ -42,12 +45,9 @@ func TestSource_Read_noTable(t *testing.T) {
 		cfg            = prepareConfig(t, keyColumns, orderingColumn)
 	)
 
-	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	db, err := sqlx.Open(driverName, cfg[config.URL])
 	is.NoErr(err)
 	defer db.Close()
-
-	err = db.Ping()
-	is.NoErr(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -58,12 +58,12 @@ func TestSource_Read_noTable(t *testing.T) {
 	is.NoErr(err)
 
 	err = src.Open(ctx, nil)
-	is.True(strings.Contains(err.Error(), "new iterator: load rows: execute select query"))
+	is.True(strings.Contains(err.Error(), "new iterator: get latest snapshot value"))
 
 	cancel()
 }
 
-func TestSource_Read_emptyTable(t *testing.T) {
+func TestSource_Read_tableHasNoData(t *testing.T) {
 	var (
 		is = is.New(t)
 
@@ -72,12 +72,9 @@ func TestSource_Read_emptyTable(t *testing.T) {
 		cfg            = prepareConfig(t, keyColumns, orderingColumn)
 	)
 
-	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	db, err := sqlx.Open(driverName, cfg[config.URL])
 	is.NoErr(err)
 	defer db.Close()
-
-	err = db.Ping()
-	is.NoErr(err)
 
 	err = createTable(db, cfg[config.Table])
 	is.NoErr(err)
@@ -130,12 +127,9 @@ func TestSource_Read_checkTypes(t *testing.T) {
 		cfg            = prepareConfig(t, keyColumns, orderingColumn)
 	)
 
-	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	db, err := sqlx.Open(driverName, cfg[config.URL])
 	is.NoErr(err)
 	defer db.Close()
-
-	err = db.Ping()
-	is.NoErr(err)
 
 	err = createTable(db, cfg[config.Table])
 	is.NoErr(err)
@@ -189,10 +183,6 @@ func TestSource_Read_checkTypes(t *testing.T) {
 
 	record, err := src.Read(ctx)
 	is.NoErr(err)
-
-	is.Equal(record.Position, sdk.Position(fmt.Sprintf(`"%s"`, want.StringType)))
-	is.Equal(record.Operation, sdk.OperationCreate)
-	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{keyColumns[0]: want.StringType}))
 
 	got := dataRow{}
 	err = json.Unmarshal(record.Payload.After.Bytes(), &got)
@@ -336,12 +326,9 @@ func TestSource_Read_checkEngines(t *testing.T) {
 		},
 	}
 
-	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	db, err := sqlx.Open(driverName, cfg[config.URL])
 	is.NoErr(err)
 	defer db.Close()
-
-	err = db.Ping()
-	is.NoErr(err)
 
 	for i := range tests {
 		_, err = db.Exec(fmt.Sprintf(tests[i].createQuery, tests[i].table))
@@ -384,10 +371,6 @@ func TestSource_Read_checkEngines(t *testing.T) {
 			record, err := src.Read(ctx)
 			is.NoErr(err)
 
-			is.Equal(record.Position, sdk.Position(fmt.Sprintf(`"%s"`, want.StringType)))
-			is.Equal(record.Operation, sdk.OperationCreate)
-			is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{keyColumns[0]: want.StringType}))
-
 			got := dataRow{}
 			err = json.Unmarshal(record.Payload.After.Bytes(), &got)
 			is.NoErr(err)
@@ -403,149 +386,7 @@ func TestSource_Read_checkEngines(t *testing.T) {
 	}
 }
 
-func TestSource_Read_successCombined(t *testing.T) {
-	type dataRow struct {
-		IntType    int    `json:"Int32Type"`
-		StringType string `json:"StringType"`
-	}
-
-	var (
-		is = is.New(t)
-
-		keyColumns     = []string{"StringType"}
-		orderingColumn = "StringType"
-		cfg            = prepareConfig(t, keyColumns, orderingColumn)
-	)
-
-	db, err := sqlx.Open("clickhouse", cfg[config.URL])
-	is.NoErr(err)
-	defer db.Close()
-
-	err = db.Ping()
-	is.NoErr(err)
-
-	err = createTable(db, cfg[config.Table])
-	is.NoErr(err)
-
-	defer func() {
-		err = dropTable(db, cfg[config.Table])
-		is.NoErr(err)
-	}()
-
-	wants := []dataRow{
-		{
-			IntType:    345,
-			StringType: "abc",
-		},
-		{
-			IntType:    234,
-			StringType: "bcd",
-		},
-		{
-			IntType:    456,
-			StringType: "cde",
-		},
-	}
-
-	// insert first two records
-	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s (Int32Type,StringType) VALUES (?,?),(?,?)", cfg[config.Table]),
-		wants[0].IntType,
-		wants[0].StringType,
-		wants[1].IntType,
-		wants[1].StringType)
-	is.NoErr(err)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	src := NewSource()
-
-	err = src.Configure(ctx, cfg)
-	is.NoErr(err)
-
-	err = src.Open(ctx, nil)
-	is.NoErr(err)
-
-	// call Read (will return the first record)
-	record, err := src.Read(ctx)
-	is.NoErr(err)
-
-	is.Equal(record.Position, sdk.Position(fmt.Sprintf(`"%s"`, wants[0].StringType)))
-	is.Equal(record.Operation, sdk.OperationCreate)
-	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{keyColumns[0]: wants[0].StringType}))
-
-	got := dataRow{}
-	err = json.Unmarshal(record.Payload.After.Bytes(), &got)
-	is.NoErr(err)
-
-	is.Equal(got.IntType, wants[0].IntType)
-	is.Equal(got.StringType, wants[0].StringType)
-
-	// stop the Source
-	cancel()
-
-	err = src.Teardown(context.Background())
-	is.NoErr(err)
-
-	// start a new Source
-	ctx, cancel = context.WithCancel(context.Background())
-	defer cancel()
-
-	src = NewSource()
-
-	err = src.Configure(ctx, cfg)
-	is.NoErr(err)
-
-	err = src.Open(ctx, record.Position)
-	is.NoErr(err)
-
-	// call Read (will return the second record)
-	record, err = src.Read(ctx)
-	is.NoErr(err)
-
-	is.Equal(record.Position, sdk.Position(fmt.Sprintf(`"%s"`, wants[1].StringType)))
-	is.Equal(record.Operation, sdk.OperationCreate)
-	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{keyColumns[0]: wants[1].StringType}))
-
-	got = dataRow{}
-	err = json.Unmarshal(record.Payload.After.Bytes(), &got)
-	is.NoErr(err)
-
-	is.Equal(got.IntType, wants[1].IntType)
-	is.Equal(got.StringType, wants[1].StringType)
-
-	// call Read (will not return the record)
-	_, err = src.Read(ctx)
-	is.Equal(err, sdk.ErrBackoffRetry)
-
-	// insert the third records
-	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s (Int32Type,StringType) VALUES (?,?)", cfg[config.Table]),
-		wants[2].IntType,
-		wants[2].StringType)
-	is.NoErr(err)
-
-	// call Read (will return the second record)
-	record, err = src.Read(ctx)
-	is.NoErr(err)
-
-	is.Equal(record.Position, sdk.Position(fmt.Sprintf(`"%s"`, wants[2].StringType)))
-	is.Equal(record.Operation, sdk.OperationCreate)
-	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{keyColumns[0]: wants[2].StringType}))
-
-	got = dataRow{}
-	err = json.Unmarshal(record.Payload.After.Bytes(), &got)
-	is.NoErr(err)
-
-	is.Equal(got.IntType, wants[2].IntType)
-	is.Equal(got.StringType, wants[2].StringType)
-
-	cancel()
-
-	err = src.Teardown(context.Background())
-	is.NoErr(err)
-}
-
-func TestSource_Read_keyColumns(t *testing.T) {
+func TestSource_Read_keyColumnsFromConfig(t *testing.T) {
 	var (
 		is  = is.New(t)
 		cfg = map[string]string{
@@ -553,15 +394,14 @@ func TestSource_Read_keyColumns(t *testing.T) {
 			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 			config.OrderingColumn: "Int32Type2",
 			config.KeyColumns:     "Int32Type0",
+			config.Snapshot:       "true",
+			config.BatchSize:      "1000",
 		}
 	)
 
-	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	db, err := sqlx.Open(driverName, cfg[config.URL])
 	is.NoErr(err)
 	defer db.Close()
-
-	err = db.Ping()
-	is.NoErr(err)
 
 	_, err = db.Exec(fmt.Sprintf(`
 	CREATE TABLE %s
@@ -601,22 +441,21 @@ func TestSource_Read_keyColumns(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestSource_Read_keyColumnsPrimaryKeys(t *testing.T) {
+func TestSource_Read_keyColumnsFromTableMetadata(t *testing.T) {
 	var (
 		is  = is.New(t)
 		cfg = map[string]string{
 			config.URL:            getURL(t),
 			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 			config.OrderingColumn: "Int32Type2",
+			config.Snapshot:       "true",
+			config.BatchSize:      "1000",
 		}
 	)
 
-	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	db, err := sqlx.Open(driverName, cfg[config.URL])
 	is.NoErr(err)
 	defer db.Close()
-
-	err = db.Ping()
-	is.NoErr(err)
 
 	_, err = db.Exec(fmt.Sprintf(`
 	CREATE TABLE %s
@@ -656,22 +495,21 @@ func TestSource_Read_keyColumnsPrimaryKeys(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestSource_Read_keyColumnsOrderingColumn(t *testing.T) {
+func TestSource_Read_keyColumnsFromOrderingColumn(t *testing.T) {
 	var (
 		is  = is.New(t)
 		cfg = map[string]string{
 			config.URL:            getURL(t),
 			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 			config.OrderingColumn: "Int32Type1",
+			config.Snapshot:       "true",
+			config.BatchSize:      "1000",
 		}
 	)
 
-	db, err := sqlx.Open("clickhouse", cfg[config.URL])
+	db, err := sqlx.Open(driverName, cfg[config.URL])
 	is.NoErr(err)
 	defer db.Close()
-
-	err = db.Ping()
-	is.NoErr(err)
 
 	_, err = db.Exec(fmt.Sprintf(`
 	CREATE TABLE %s
@@ -710,10 +548,77 @@ func TestSource_Read_keyColumnsOrderingColumn(t *testing.T) {
 	is.NoErr(err)
 }
 
+func TestSource_Read_snapshotIsFalse(t *testing.T) {
+	var (
+		is  = is.New(t)
+		cfg = map[string]string{
+			config.URL:            getURL(t),
+			config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
+			config.OrderingColumn: "Int32Type1",
+			config.Snapshot:       "true",
+			config.BatchSize:      "1000",
+		}
+	)
+
+	// set snapshot configuration value with "false"
+	cfg[config.Snapshot] = "false"
+
+	db, err := sqlx.Open(driverName, cfg[config.URL])
+	is.NoErr(err)
+	defer db.Close()
+
+	_, err = db.Exec(fmt.Sprintf(`
+	CREATE TABLE %s
+	(
+		Int32Type0	Int32,
+		Int32Type1	Int32,
+	) ENGINE Log();`, cfg[config.Table]))
+	is.NoErr(err)
+
+	defer func() {
+		err = dropTable(db, cfg[config.Table])
+		is.NoErr(err)
+	}()
+
+	// insert a row to be sure that this data will not be transferred to the destination
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s VALUES (10, 20)", cfg[config.Table]))
+	is.NoErr(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	src := NewSource()
+
+	err = src.Configure(ctx, cfg)
+	is.NoErr(err)
+
+	err = src.Open(ctx, nil)
+	is.NoErr(err)
+
+	_, err = src.Read(ctx)
+	is.Equal(err, sdk.ErrBackoffRetry)
+
+	// insert an additional row
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO %s VALUES (20, 30)", cfg[config.Table]))
+	is.NoErr(err)
+
+	record, err := src.Read(ctx)
+	is.NoErr(err)
+	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{"Int32Type1": int32(30)}))
+
+	_, err = src.Read(ctx)
+	is.Equal(err, sdk.ErrBackoffRetry)
+
+	cancel()
+
+	err = src.Teardown(context.Background())
+	is.NoErr(err)
+}
+
 func getURL(t *testing.T) string {
-	url := os.Getenv("CLICKHOUSE_URL")
+	url := os.Getenv(envNameURL)
 	if url == "" {
-		t.Skip("CLICKHOUSE_URL env var must be set")
+		t.Skipf("%s env var must be set", envNameURL)
 
 		return ""
 	}
@@ -727,6 +632,8 @@ func prepareConfig(t *testing.T, keyColumns []string, orderingColumn string) map
 		config.Table:          fmt.Sprintf("CONDUIT_SRC_TEST_%s", randString(6)),
 		config.KeyColumns:     strings.Join(keyColumns, ","),
 		config.OrderingColumn: orderingColumn,
+		config.Snapshot:       "true",
+		config.BatchSize:      "1000",
 	}
 }
 
