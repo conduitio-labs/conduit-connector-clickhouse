@@ -1,9 +1,9 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/ClickHouse/ch-go v0.58.1 h1:qeR9X3ZYYVgvV7VEoV9SpHksPkuJiMeV6GrW56qIHTQ=
-github.com/ClickHouse/ch-go v0.58.1/go.mod h1:Ap/0bEmiLa14gYjCiRkYGbXvbe8vwdrfTYWhsuQ99aw=
-github.com/ClickHouse/clickhouse-go/v2 v2.13.1 h1:KdPZqyugG65MxQ8ZsSIP2gCNiAGiAvprnf09eECgZEA=
-github.com/ClickHouse/clickhouse-go/v2 v2.13.1/go.mod h1:eD4eFiHTXiyYYJVev5Ud3pJjTKuLtca65vc+rAILwhc=
+github.com/ClickHouse/ch-go v0.58.2 h1:jSm2szHbT9MCAB1rJ3WuCJqmGLi5UTjlNu+f530UTS0=
+github.com/ClickHouse/ch-go v0.58.2/go.mod h1:Ap/0bEmiLa14gYjCiRkYGbXvbe8vwdrfTYWhsuQ99aw=
+github.com/ClickHouse/clickhouse-go/v2 v2.13.2 h1:LSg6670+xbd5VczO5Ei3DHZBIeGulfwhNuHCUth/qOA=
+github.com/ClickHouse/clickhouse-go/v2 v2.13.2/go.mod h1:4QITCrdY/ugPYA+QGnJ92h+v7TGaZQ7l0393Q/wlM3Q=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver/v3 v3.2.0 h1:3MEsd0SM6jqZojhjLWWeBY+Kcjy9i6MQAeY7YgDP83g=
