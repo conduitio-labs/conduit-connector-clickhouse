@@ -10,7 +10,7 @@ Connector uses [Golang SQL database driver](https://github.com/ClickHouse/clickh
 ## Prerequisites
 
 - [Go](https://go.dev/) 1.21
-- (optional) [golangci-lint](https://github.com/golangci/golangci-lint) 1.53.3
+- (optional) [golangci-lint](https://github.com/golangci/golangci-lint) 1.55.2
 
 ## How to build it
 
