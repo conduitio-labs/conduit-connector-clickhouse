@@ -2,6 +2,8 @@ module github.com/conduitio-labs/conduit-connector-clickhouse
 
 go 1.21
 
+toolchain go1.21.1
+
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.15.0
 	github.com/conduitio/conduit-connector-sdk v0.7.2
@@ -23,7 +25,6 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.6.1 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.3 // indirect
 	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
