@@ -9,7 +9,7 @@ require (
 	github.com/conduitio/conduit-connector-sdk v0.8.0
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.4.0
-	github.com/huandu/go-sqlbuilder v1.24.0
+	github.com/huandu/go-sqlbuilder v1.25.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/matryer/is v1.4.1
 	go.uber.org/multierr v1.11.0
