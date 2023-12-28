@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.1
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.17.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.17.1
 	github.com/conduitio/conduit-connector-sdk v0.8.0
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.5.0
