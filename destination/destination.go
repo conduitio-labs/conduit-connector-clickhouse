@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate mockgen -destination mock/destination.go -package mock . Writer
+
 package destination
 
 import (
@@ -65,7 +67,7 @@ type Writer interface {
 type Destination struct {
 	sdk.UnimplementedDestination
 
-	config config.DestConfig
+	config config.DestinationConfig
 	db     *sqlx.DB
 	writer Writer
 }
@@ -82,9 +84,9 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 
 // Configure parses and stores configurations, returns an error in case of invalid configuration.
 func (d *Destination) Configure(ctx context.Context, cfg map[string]string) error {
-	sdk.Logger(ctx).Info().Msg("Configuring ClickHouse DestConfig...")
+	sdk.Logger(ctx).Info().Msg("Configuring ClickHouse DestinationConfig...")
 
-	var destConfig config.DestConfig
+	var destConfig config.DestinationConfig
 	err := sdk.Util.ParseConfig(cfg, &destConfig)
 	if err != nil {
 		return err

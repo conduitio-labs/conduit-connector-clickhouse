@@ -14,7 +14,7 @@
 
 package config
 
-//go:generate paramgen -output=paramgen_src.go SrcConfig
+//go:generate paramgen -output=paramgen_src.go SourceConfig
 
 const (
 	// OrderingColumn is a config name for an ordering column.

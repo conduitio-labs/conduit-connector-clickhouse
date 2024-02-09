@@ -24,11 +24,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
 	"github.com/matryer/is"
-
-	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
 )
 
 // envNameURL is a ClickHouse url environment name.
@@ -182,6 +181,7 @@ func TestDestination_Write_successCheckEngines(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			is := is.New(t)
 			cfg[config.Table] = tt.table
 
 			cctx, cancel := context.WithCancel(ctx)

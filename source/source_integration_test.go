@@ -346,6 +346,7 @@ func TestSource_Read_checkEngines(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			is := is.New(t)
 			cfg[config.Table] = tt.table
 
 			want := dataRow{

@@ -1,4 +1,4 @@
-// Copyright © 2023 Meroxa, Inc. & Yalantis
+// Copyright © 2024 Meroxa, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+//go:build tools
 
-//go:generate paramgen -output=paramgen_dest.go DestinationConfig
+package clickhouse
 
-// DestinationConfig is a destination configuration needed to connect to ClickHouse database.
-type DestinationConfig struct {
-	Config
-}
+import (
+	_ "github.com/conduitio/conduit-connector-sdk/cmd/paramgen"
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "go.uber.org/mock/mockgen"
+)

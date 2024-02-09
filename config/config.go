@@ -19,7 +19,7 @@ const (
 	URL = "url"
 	// Table is the configuration name of the table.
 	Table = "table"
-	// KeyColumns is the configuration name of key column names (for the DestConfig),
+	// KeyColumns is the configuration name of key column names (for the DestinationConfig),
 	// or of the names of the columns to build the record.Key (for the SourceConfig), separated by commas.
 	KeyColumns = "keyColumns"
 )
