@@ -50,6 +50,7 @@ var timeLayouts = []string{time.RFC3339, time.RFC3339Nano, time.Layout, time.ANS
 func getColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[string]string, error) {
 	dest := make(map[string]any)
 
+	//nolint:sqlclosecheck // false positive, see: https://github.com/ryanrolds/sqlclosecheck/issues/35
 	rows, err := db.QueryxContext(ctx, fmt.Sprintf(queryDescribeTable, tableName))
 	if err != nil {
 		return nil, fmt.Errorf("query column types: %w", err)

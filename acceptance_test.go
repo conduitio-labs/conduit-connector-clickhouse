@@ -66,8 +66,6 @@ func (d *driver) GenerateRecord(_ *testing.T, operation sdk.Operation) sdk.Recor
 func TestAcceptance(t *testing.T) {
 	cfg := prepareConfig(t)
 
-	is := is.New(t)
-
 	sdk.AcceptanceTest(t, &driver{
 		ConfigurableAcceptanceTestDriver: sdk.ConfigurableAcceptanceTestDriver{
 			Config: sdk.ConfigurableAcceptanceTestDriverConfig{
@@ -75,10 +73,12 @@ func TestAcceptance(t *testing.T) {
 				SourceConfig:      cfg,
 				DestinationConfig: cfg,
 				BeforeTest: func(t *testing.T) {
+					is := is.New(t)
 					err := createTable(cfg[config.URL], cfg[config.Table])
 					is.NoErr(err)
 				},
 				AfterTest: func(t *testing.T) {
+					is := is.New(t)
 					err := dropTables(cfg[config.URL], cfg[config.Table])
 					is.NoErr(err)
 				},

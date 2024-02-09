@@ -181,6 +181,7 @@ func TestDestination_Write_successCheckEngines(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			is := is.New(t)
 			cfg[config.Table] = tt.table
 
 			cctx, cancel := context.WithCancel(ctx)

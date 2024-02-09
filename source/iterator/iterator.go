@@ -246,6 +246,7 @@ func (iter *Iterator) populateKeyColumns(ctx context.Context, database string) e
 
 	query, args := sb.Build()
 
+	//nolint:sqlclosecheck // false positive, see: https://github.com/ryanrolds/sqlclosecheck/issues/35
 	rows, err := iter.db.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("execute select primary keys query %q, %v: %w", query, args, err)
@@ -259,6 +260,9 @@ func (iter *Iterator) populateKeyColumns(ctx context.Context, database string) e
 		}
 
 		iter.keyColumns = append(iter.keyColumns, keyColumn)
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("failed to iterate over rows: %w", err)
 	}
 
 	if len(iter.keyColumns) != 0 {
@@ -281,6 +285,7 @@ func (iter *Iterator) latestSnapshotValue(ctx context.Context) (any, error) {
 		Limit(1).
 		String()
 
+	//nolint:sqlclosecheck // false positive, see: https://github.com/ryanrolds/sqlclosecheck/issues/35
 	rows, err := iter.db.QueryxContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("execute select latest snapshot value query %q: %w", query, err)
@@ -291,6 +296,9 @@ func (iter *Iterator) latestSnapshotValue(ctx context.Context) (any, error) {
 		if err = rows.Scan(&latestSnapshotValue); err != nil {
 			return nil, fmt.Errorf("scan latest snapshot value: %w", err)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate over rows: %w", err)
 	}
 
 	return latestSnapshotValue, nil
