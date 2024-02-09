@@ -7,7 +7,7 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-func (DestConfig) Parameters() map[string]sdk.Parameter {
+func (DestinationConfig) Parameters() map[string]sdk.Parameter {
 	return map[string]sdk.Parameter{
 		"keyColumns": {
 			Default:     "",

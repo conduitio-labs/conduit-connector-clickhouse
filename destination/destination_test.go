@@ -22,8 +22,8 @@ import (
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/mock"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/writer"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/golang/mock/gomock"
 	"github.com/matryer/is"
+	"go.uber.org/mock/gomock"
 )
 
 func TestDestination_Write_Success(t *testing.T) {
