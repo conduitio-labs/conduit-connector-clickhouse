@@ -3,7 +3,7 @@ module github.com/conduitio-labs/conduit-connector-clickhouse
 go 1.21
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.19.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.20.0
 	github.com/conduitio/conduit-connector-sdk v0.8.0
 	github.com/golangci/golangci-lint v1.56.2
 	github.com/google/uuid v1.6.0
@@ -203,8 +203,8 @@ require (
 	gitlab.com/bosi/decorder v0.4.1 // indirect
 	go-simpler.org/musttag v0.8.0 // indirect
 	go-simpler.org/sloglint v0.4.0 // indirect
-	go.opentelemetry.io/otel v1.23.1 // indirect
-	go.opentelemetry.io/otel/trace v1.23.1 // indirect
+	go.opentelemetry.io/otel v1.24.0 // indirect
+	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
