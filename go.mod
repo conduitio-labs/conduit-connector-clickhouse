@@ -3,7 +3,7 @@ module github.com/conduitio-labs/conduit-connector-clickhouse
 go 1.21
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.23.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.23.1
 	github.com/conduitio/conduit-connector-sdk v0.8.0
 	github.com/golangci/golangci-lint v1.57.2
 	github.com/google/uuid v1.6.0
@@ -165,7 +165,7 @@ require (
 	github.com/securego/gosec/v2 v2.19.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/shazow/go-diff v0.0.0-20160112020656-b6b7b6733b8c // indirect
-	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sivchari/containedctx v1.0.3 // indirect
 	github.com/sivchari/tenv v1.7.1 // indirect
