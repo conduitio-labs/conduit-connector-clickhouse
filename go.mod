@@ -3,7 +3,7 @@ module github.com/conduitio-labs/conduit-connector-clickhouse
 go 1.22.2
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.27.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.27.1
 	github.com/conduitio/conduit-connector-sdk v0.9.1
 	github.com/golangci/golangci-lint v1.59.1
 	github.com/google/uuid v1.6.0
