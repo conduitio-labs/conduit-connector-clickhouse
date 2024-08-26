@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	"github.com/jmoiron/sqlx"
 	"github.com/matryer/is"
 )
@@ -195,13 +195,13 @@ func TestDestination_Write_successCheckEngines(t *testing.T) {
 			is.NoErr(err)
 
 			// OperationCreate
-			n, err := dest.Write(cctx, []sdk.Record{
+			n, err := dest.Write(cctx, []opencdc.Record{
 				{
-					Operation: sdk.OperationCreate,
-					Key: sdk.StructuredData{
+					Operation: opencdc.OperationCreate,
+					Key: opencdc.StructuredData{
 						"Int32Type": 42,
 					},
-					Payload: sdk.Change{After: sdk.StructuredData{
+					Payload: opencdc.Change{After: opencdc.StructuredData{
 						"Int32Type":  42,
 						"StringType": "Jane",
 					}},
@@ -215,13 +215,13 @@ func TestDestination_Write_successCheckEngines(t *testing.T) {
 			is.Equal(name, "Jane")
 
 			// OperationUpdate
-			n, err = dest.Write(cctx, []sdk.Record{
+			n, err = dest.Write(cctx, []opencdc.Record{
 				{
-					Operation: sdk.OperationUpdate,
-					Key: sdk.StructuredData{
+					Operation: opencdc.OperationUpdate,
+					Key: opencdc.StructuredData{
 						"Int32Type": 42,
 					},
-					Payload: sdk.Change{After: sdk.StructuredData{
+					Payload: opencdc.Change{After: opencdc.StructuredData{
 						"Int32Type":  42,
 						"StringType": "Sam",
 					}},
@@ -237,10 +237,10 @@ func TestDestination_Write_successCheckEngines(t *testing.T) {
 			}
 
 			// OperationDelete
-			n, err = dest.Write(cctx, []sdk.Record{
+			n, err = dest.Write(cctx, []opencdc.Record{
 				{
-					Operation: sdk.OperationDelete,
-					Key:       sdk.RawData(`{"Int32Type":42}`),
+					Operation: opencdc.OperationDelete,
+					Key:       opencdc.RawData(`{"Int32Type":42}`),
 				},
 			})
 			is.NoErr(err)
@@ -297,13 +297,13 @@ func TestDestination_Write_successKeyColumns(t *testing.T) {
 	is.NoErr(err)
 
 	// update the record with a Key
-	n, err := dest.Write(ctx, []sdk.Record{
+	n, err := dest.Write(ctx, []opencdc.Record{
 		{
-			Operation: sdk.OperationUpdate,
-			Key: sdk.StructuredData{
+			Operation: opencdc.OperationUpdate,
+			Key: opencdc.StructuredData{
 				"Int32Type": 42,
 			},
-			Payload: sdk.Change{After: sdk.StructuredData{
+			Payload: opencdc.Change{After: opencdc.StructuredData{
 				"Int32Type":  42,
 				"StringType": "Jane",
 			}},
@@ -317,10 +317,10 @@ func TestDestination_Write_successKeyColumns(t *testing.T) {
 	is.Equal(name, "Jane")
 
 	// update the record with no Key
-	n, err = dest.Write(ctx, []sdk.Record{
+	n, err = dest.Write(ctx, []opencdc.Record{
 		{
-			Operation: sdk.OperationUpdate,
-			Payload: sdk.Change{After: sdk.StructuredData{
+			Operation: opencdc.OperationUpdate,
+			Payload: opencdc.Change{After: opencdc.StructuredData{
 				"Int32Type":  42,
 				"StringType": "Sam",
 			}},
@@ -376,10 +376,10 @@ func TestDestination_Write_failedWrongKeyColumnsField(t *testing.T) {
 	is.NoErr(err)
 
 	// update the record with no Key
-	_, err = dest.Write(ctx, []sdk.Record{
+	_, err = dest.Write(ctx, []opencdc.Record{
 		{
-			Operation: sdk.OperationUpdate,
-			Payload: sdk.Change{After: sdk.StructuredData{
+			Operation: opencdc.OperationUpdate,
+			Payload: opencdc.Change{After: opencdc.StructuredData{
 				"Int32Type":  42,
 				"StringType": "Sam",
 			}},
@@ -423,10 +423,10 @@ func TestDestination_Write_failedWrongPayloadKey(t *testing.T) {
 	err = dest.Open(ctx)
 	is.NoErr(err)
 
-	_, err = dest.Write(ctx, []sdk.Record{
+	_, err = dest.Write(ctx, []opencdc.Record{
 		{
-			Operation: sdk.OperationSnapshot,
-			Payload: sdk.Change{After: sdk.StructuredData{
+			Operation: opencdc.OperationSnapshot,
+			Payload: opencdc.Change{After: opencdc.StructuredData{
 				"Int32Type":    43,
 				"wrong_column": "test",
 			}},

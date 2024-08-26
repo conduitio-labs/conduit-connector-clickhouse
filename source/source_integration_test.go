@@ -27,6 +27,7 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -434,7 +435,7 @@ func TestSource_Read_keyColumnsFromConfig(t *testing.T) {
 
 	record, err := src.Read(ctx)
 	is.NoErr(err)
-	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{"Int32Type0": int32(10)}))
+	is.Equal(record.Key, opencdc.StructuredData(map[string]interface{}{"Int32Type0": int32(10)}))
 
 	cancel()
 
@@ -488,7 +489,7 @@ func TestSource_Read_keyColumnsFromTableMetadata(t *testing.T) {
 
 	record, err := src.Read(ctx)
 	is.NoErr(err)
-	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{"Int32Type0": int32(10), "Int32Type1": int32(20)}))
+	is.Equal(record.Key, opencdc.StructuredData(map[string]interface{}{"Int32Type0": int32(10), "Int32Type1": int32(20)}))
 
 	cancel()
 
@@ -541,7 +542,7 @@ func TestSource_Read_keyColumnsFromOrderingColumn(t *testing.T) {
 
 	record, err := src.Read(ctx)
 	is.NoErr(err)
-	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{"Int32Type1": int32(20)}))
+	is.Equal(record.Key, opencdc.StructuredData(map[string]interface{}{"Int32Type1": int32(20)}))
 
 	cancel()
 
@@ -605,7 +606,7 @@ func TestSource_Read_snapshotIsFalse(t *testing.T) {
 
 	record, err := src.Read(ctx)
 	is.NoErr(err)
-	is.Equal(record.Key, sdk.StructuredData(map[string]interface{}{"Int32Type1": int32(30)}))
+	is.Equal(record.Key, opencdc.StructuredData(map[string]interface{}{"Int32Type1": int32(30)}))
 
 	_, err = src.Read(ctx)
 	is.Equal(err, sdk.ErrBackoffRetry)

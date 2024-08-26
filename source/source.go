@@ -20,8 +20,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
+	cconfig "github.com/conduitio-labs/conduit-connector-clickhouse/config"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/source/iterator"
+	"github.com/conduitio/conduit-commons/config"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -31,7 +33,7 @@ const driverName = "clickhouse"
 // Iterator interface.
 type Iterator interface {
 	HasNext(context.Context) (bool, error)
-	Next(context.Context) (sdk.Record, error)
+	Next(context.Context) (opencdc.Record, error)
 	Stop() error
 }
 
@@ -39,7 +41,7 @@ type Iterator interface {
 type Source struct {
 	sdk.UnimplementedSource
 
-	config   config.SourceConfig
+	config   cconfig.SourceConfig
 	iterator Iterator
 }
 
@@ -49,17 +51,17 @@ func NewSource() sdk.Source {
 }
 
 // Parameters returns a map of named Parameters that describe how to configure the Source.
-func (s *Source) Parameters() map[string]sdk.Parameter {
+func (s *Source) Parameters() config.Parameters {
 	return s.config.Parameters()
 }
 
 // Configure parses and stores configurations,
 // returns an error in case of invalid configuration.
-func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
+func (s *Source) Configure(ctx context.Context, cfg config.Config) error {
 	sdk.Logger(ctx).Info().Msg("Configuring ClickHouse Source...")
 
-	var config config.SourceConfig
-	err := sdk.Util.ParseConfig(cfg, &config)
+	var config cconfig.SourceConfig
+	err := sdk.Util.ParseConfig(ctx, cfg, &config, NewSource().Parameters())
 	if err != nil {
 		return err
 	}
@@ -69,7 +71,7 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 }
 
 // Open parses the position and initializes the iterator.
-func (s *Source) Open(ctx context.Context, position sdk.Position) error {
+func (s *Source) Open(ctx context.Context, position opencdc.Position) error {
 	sdk.Logger(ctx).Info().Msg("Opening a ClickHouse Source...")
 
 	pos, err := iterator.ParseSDKPosition(position)
@@ -86,28 +88,28 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 }
 
 // Read returns the next record.
-func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
+func (s *Source) Read(ctx context.Context) (opencdc.Record, error) {
 	sdk.Logger(ctx).Debug().Msg("Reading a record from ClickHouse Source...")
 
 	hasNext, err := s.iterator.HasNext(ctx)
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("has next: %w", err)
+		return opencdc.Record{}, fmt.Errorf("has next: %w", err)
 	}
 
 	if !hasNext {
-		return sdk.Record{}, sdk.ErrBackoffRetry
+		return opencdc.Record{}, sdk.ErrBackoffRetry
 	}
 
 	record, err := s.iterator.Next(ctx)
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("next: %w", err)
+		return opencdc.Record{}, fmt.Errorf("next: %w", err)
 	}
 
 	return record, nil
 }
 
 // Ack logs the debug event with the position.
-func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
+func (s *Source) Ack(ctx context.Context, position opencdc.Position) error {
 	sdk.Logger(ctx).Debug().Str("position", string(position)).Msg("got ack")
 
 	return nil

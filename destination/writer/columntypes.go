@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -75,9 +75,9 @@ func getColumnTypes(ctx context.Context, db *sqlx.DB, tableName string) (map[str
 // convertStructureData converts a [sdk.StructureData] values to a proper database types.
 func convertStructureData(
 	columnTypes map[string]string,
-	data sdk.StructuredData,
-) (sdk.StructuredData, error) {
-	result := make(sdk.StructuredData, len(data))
+	data opencdc.StructuredData,
+) (opencdc.StructuredData, error) {
+	result := make(opencdc.StructuredData, len(data))
 
 	for key, value := range data {
 		if value == nil {

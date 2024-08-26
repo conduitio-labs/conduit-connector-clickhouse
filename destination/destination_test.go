@@ -21,7 +21,7 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/mock"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/destination/writer"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	"github.com/matryer/is"
 	"go.uber.org/mock/gomock"
 )
@@ -34,31 +34,31 @@ func TestDestination_Write_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	ctx := context.Background()
 
-	metadata := sdk.Metadata{}
+	metadata := opencdc.Metadata{}
 	metadata.SetCreatedAt(time.Now())
 
-	records := []sdk.Record{
+	records := []opencdc.Record{
 		{
-			Operation: sdk.OperationSnapshot,
+			Operation: opencdc.OperationSnapshot,
 			Metadata:  metadata,
-			Key: sdk.StructuredData{
+			Key: opencdc.StructuredData{
 				"id": 1,
 			},
-			Payload: sdk.Change{
-				After: sdk.StructuredData{
+			Payload: opencdc.Change{
+				After: opencdc.StructuredData{
 					"id":   1,
 					"name": "John",
 				},
 			},
 		},
 		{
-			Operation: sdk.OperationCreate,
+			Operation: opencdc.OperationCreate,
 			Metadata:  metadata,
-			Key: sdk.StructuredData{
+			Key: opencdc.StructuredData{
 				"id": 2,
 			},
-			Payload: sdk.Change{
-				After: sdk.StructuredData{
+			Payload: opencdc.Change{
+				After: opencdc.StructuredData{
 					"id":   2,
 					"name": "Sam",
 				},
@@ -88,10 +88,10 @@ func TestDestination_Write_Fail_NoPayload(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	ctx := context.Background()
 
-	record := sdk.Record{
-		Position:  sdk.Position("1.0"),
-		Operation: sdk.OperationCreate,
-		Key: sdk.StructuredData{
+	record := opencdc.Record{
+		Position:  opencdc.Position("1.0"),
+		Operation: opencdc.OperationCreate,
+		Key: opencdc.StructuredData{
 			"id": 1,
 		},
 	}
@@ -103,7 +103,7 @@ func TestDestination_Write_Fail_NoPayload(t *testing.T) {
 		writer: w,
 	}
 
-	written, err := d.Write(ctx, []sdk.Record{record})
+	written, err := d.Write(ctx, []opencdc.Record{record})
 	is.Equal(err.Error(), `key {"id":1}: no payload`)
 	is.Equal(written, 0)
 }
@@ -116,11 +116,11 @@ func TestDestination_Write_Fail_NoKey(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	ctx := context.Background()
 
-	record := sdk.Record{
-		Position:  sdk.Position("1.0"),
-		Operation: sdk.OperationUpdate,
-		Payload: sdk.Change{
-			After: sdk.StructuredData{
+	record := opencdc.Record{
+		Position:  opencdc.Position("1.0"),
+		Operation: opencdc.OperationUpdate,
+		Payload: opencdc.Change{
+			After: opencdc.StructuredData{
 				"id":   1,
 				"name": "John",
 			},
@@ -134,7 +134,7 @@ func TestDestination_Write_Fail_NoKey(t *testing.T) {
 		writer: w,
 	}
 
-	written, err := d.Write(ctx, []sdk.Record{record})
+	written, err := d.Write(ctx, []opencdc.Record{record})
 	is.Equal(err.Error(), "record with no key: key value must be provided")
 	is.Equal(written, 0)
 }
