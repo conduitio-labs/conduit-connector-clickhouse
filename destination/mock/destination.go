@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	opencdc "github.com/conduitio/conduit-commons/opencdc"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -41,7 +41,7 @@ func (m *MockWriter) EXPECT() *MockWriterMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockWriter) Delete(arg0 context.Context, arg1 sdk.Record) error {
+func (m *MockWriter) Delete(arg0 context.Context, arg1 opencdc.Record) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -55,7 +55,7 @@ func (mr *MockWriterMockRecorder) Delete(arg0, arg1 any) *gomock.Call {
 }
 
 // Insert mocks base method.
-func (m *MockWriter) Insert(arg0 context.Context, arg1 sdk.Record) error {
+func (m *MockWriter) Insert(arg0 context.Context, arg1 opencdc.Record) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -69,7 +69,7 @@ func (mr *MockWriterMockRecorder) Insert(arg0, arg1 any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockWriter) Update(arg0 context.Context, arg1 sdk.Record) error {
+func (m *MockWriter) Update(arg0 context.Context, arg1 opencdc.Record) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
 	ret0, _ := ret[0].(error)

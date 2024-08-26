@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
 )
@@ -73,7 +74,7 @@ func NewWriter(ctx context.Context, params Params) (*Writer, error) {
 }
 
 // Insert inserts a record.
-func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
+func (w *Writer) Insert(ctx context.Context, record opencdc.Record) error {
 	tableName := w.getTableName(record.Metadata)
 
 	payload, err := w.structurizeData(record.Payload.After)
@@ -109,7 +110,7 @@ func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 }
 
 // Update updates a record.
-func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
+func (w *Writer) Update(ctx context.Context, record opencdc.Record) error {
 	if !w.supportsMutations {
 		sdk.Logger(ctx).Warn().Msg("The current table engine doesn't support update operation")
 
@@ -139,7 +140,7 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 	}
 
 	if key == nil {
-		key = make(sdk.StructuredData)
+		key = make(opencdc.StructuredData)
 
 		for i := range w.keyColumns {
 			val, ok := payload[w.keyColumns[i]]
@@ -185,7 +186,7 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 }
 
 // Delete deletes a record.
-func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
+func (w *Writer) Delete(ctx context.Context, record opencdc.Record) error {
 	if !w.supportsMutations {
 		sdk.Logger(ctx).Warn().Msg("The current table engine doesn't support delete operation")
 
@@ -232,8 +233,8 @@ func (w *Writer) getTableName(metadata map[string]string) string {
 	return tableName
 }
 
-// getKeyColumns returns either all the keys of the sdk.Record's Key field.
-func (w *Writer) getKeyColumns(key sdk.StructuredData) ([]string, error) {
+// getKeyColumns returns either all the keys of the opencdc.Record's Key field.
+func (w *Writer) getKeyColumns(key opencdc.StructuredData) ([]string, error) {
 	if len(key) == 0 {
 		return nil, ErrNoKey
 	}
@@ -246,13 +247,13 @@ func (w *Writer) getKeyColumns(key sdk.StructuredData) ([]string, error) {
 	return keyColumns, nil
 }
 
-// structurizeData converts sdk.Data to sdk.StructuredData.
-func (w *Writer) structurizeData(data sdk.Data) (sdk.StructuredData, error) {
+// structurizeData converts opencdc.Data to opencdc.StructuredData.
+func (w *Writer) structurizeData(data opencdc.Data) (opencdc.StructuredData, error) {
 	if data == nil || len(data.Bytes()) == 0 {
 		return nil, nil
 	}
 
-	structuredData := make(sdk.StructuredData)
+	structuredData := make(opencdc.StructuredData)
 	if err := json.Unmarshal(data.Bytes(), &structuredData); err != nil {
 		return nil, fmt.Errorf("unmarshal data into structured data: %w", err)
 	}
@@ -261,7 +262,7 @@ func (w *Writer) structurizeData(data sdk.Data) (sdk.StructuredData, error) {
 }
 
 // extractColumnsAndValues turns the payload into slices of columns and values for inserting into ClickHouse.
-func (w *Writer) extractColumnsAndValues(payload sdk.StructuredData) ([]string, []any) {
+func (w *Writer) extractColumnsAndValues(payload opencdc.StructuredData) ([]string, []any) {
 	var (
 		columns []string
 		values  []any

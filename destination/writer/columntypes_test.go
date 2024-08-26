@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 )
 
 func TestConvertStructureData(t *testing.T) {
@@ -31,13 +31,13 @@ func TestConvertStructureData(t *testing.T) {
 		"datetime_field":        chTypeDateTime,
 		"datetime_string_field": chTypeDateTime,
 	}
-	data := sdk.StructuredData{
+	data := opencdc.StructuredData{
 		"int_field":             42,
 		"date_field":            time.Unix(957123851, 0).UTC(),
 		"datetime_field":        time.Unix(957123851, 0).UTC(),
 		"datetime_string_field": "2000-04-30T19:44:11+00:00",
 	}
-	want := sdk.StructuredData{
+	want := opencdc.StructuredData{
 		"int_field":             42,
 		"date_field":            "2000-04-30 19:44:11",
 		"datetime_field":        "2000-04-30 19:44:11",

@@ -59,7 +59,7 @@ configuration.
 | `table`          | Name of the table that the connector should read.                                                                                                                   | **true** | `table_name`                                   |
 | `orderingColumn` | Column name that the connector will use for ordering rows. Column must contain unique values and suitable for sorting, otherwise the snapshot won't work correctly. | **true** | `id`                                           |
 | `snapshot`       | whether to take a snapshot of the entire table before starting CDC mode or not. The default is `true`.                                                              | false    | `false`, `true`                                |
-| `keyColumns`     | Comma-separated list of column names to build the `sdk.Record.Key`. See more: [key handling](#key-handling).                                                        | false    | `id,name`                                      |
+| `keyColumns`     | Comma-separated list of column names to build the `opencdc.Record.Key`. See more: [key handling](#key-handling).                                                    | false    | `id,name`                                      |
 | `batchSize`      | Size of rows batch. Min is 1 and max is 100000. The default is 1000.                                                                                                | false    | `100`                                          |
 
 #### Key handling
@@ -71,7 +71,7 @@ value of the `orderingColumn` field as the `keyColumns` value.
 ## Destination
 
 The ClickHouse Destination allows you to move data from any Conduit Source to a ClickHouse table. It takes
-a `sdk.Record` and parses it into a valid SQL
+a `opencdc.Record` and parses it into a valid SQL
 query. [Log family engines](https://clickhouse.com/docs/en/engines/table-engines/#log) do not support data changes, so
 in case of `OperationUpdate` or `OperationDelete` operations they will return the next
 error: `Table engine {{table_engine}} doesn't support mutations.`
@@ -94,7 +94,7 @@ connector, as long as the user has proper access to those tables.
 
 #### Key Handling
 
-If the `sdk.Record.Key` is empty, it is formed from `sdk.Record.Payload` data by the comma-separated `keyColumns` list
+If the `opencdc.Record.Key` is empty, it is formed from `opencdc.Record.Payload` data by the comma-separated `keyColumns` list
 of keys (for update operations only).
 
 ## Known limitations

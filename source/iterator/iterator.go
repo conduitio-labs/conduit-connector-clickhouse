@@ -22,6 +22,7 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jmoiron/sqlx"
@@ -128,21 +129,21 @@ func (iter *Iterator) HasNext(ctx context.Context) (bool, error) {
 }
 
 // Next returns the next record.
-func (iter *Iterator) Next(context.Context) (sdk.Record, error) {
+func (iter *Iterator) Next(context.Context) (opencdc.Record, error) {
 	row := make(map[string]any)
 	if err := iter.rows.MapScan(row); err != nil {
-		return sdk.Record{}, fmt.Errorf("scan rows: %w", err)
+		return opencdc.Record{}, fmt.Errorf("scan rows: %w", err)
 	}
 
 	if _, ok := row[iter.orderingColumn]; !ok {
-		return sdk.Record{}, fmt.Errorf("ordering column %q not found", iter.orderingColumn)
+		return opencdc.Record{}, fmt.Errorf("ordering column %q not found", iter.orderingColumn)
 	}
 
-	key := make(sdk.StructuredData)
+	key := make(opencdc.StructuredData)
 	for i := range iter.keyColumns {
 		val, ok := row[iter.keyColumns[i]]
 		if !ok {
-			return sdk.Record{}, fmt.Errorf("key column %q not found", iter.keyColumns[i])
+			return opencdc.Record{}, fmt.Errorf("key column %q not found", iter.keyColumns[i])
 		}
 
 		key[iter.keyColumns[i]] = val
@@ -150,7 +151,7 @@ func (iter *Iterator) Next(context.Context) (sdk.Record, error) {
 
 	rowBytes, err := json.Marshal(row)
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("marshal row: %w", err)
+		return opencdc.Record{}, fmt.Errorf("marshal row: %w", err)
 	}
 
 	// set a new position into the variable,
@@ -161,21 +162,21 @@ func (iter *Iterator) Next(context.Context) (sdk.Record, error) {
 
 	convertedPosition, err := position.marshal()
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("convert position :%w", err)
+		return opencdc.Record{}, fmt.Errorf("convert position :%w", err)
 	}
 
 	iter.position = &position
 
-	metadata := sdk.Metadata{
+	metadata := opencdc.Metadata{
 		metadataFieldTable: iter.table,
 	}
 	metadata.SetCreatedAt(time.Now())
 
 	if position.LatestSnapshotValue != nil {
-		return sdk.Util.Source.NewRecordSnapshot(convertedPosition, metadata, key, sdk.RawData(rowBytes)), nil
+		return sdk.Util.Source.NewRecordSnapshot(convertedPosition, metadata, key, opencdc.RawData(rowBytes)), nil
 	}
 
-	return sdk.Util.Source.NewRecordCreate(convertedPosition, metadata, key, sdk.RawData(rowBytes)), nil
+	return sdk.Util.Source.NewRecordCreate(convertedPosition, metadata, key, opencdc.RawData(rowBytes)), nil
 }
 
 // Stop stops iterators and closes database connection.

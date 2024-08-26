@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/conduitio-labs/conduit-connector-clickhouse/config"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -44,20 +45,20 @@ type driver struct {
 	id int32
 }
 
-// GenerateRecord generates a random sdk.Record.
-func (d *driver) GenerateRecord(_ *testing.T, operation sdk.Operation) sdk.Record {
+// GenerateRecord generates a random opencdc.Record.
+func (d *driver) GenerateRecord(_ *testing.T, operation opencdc.Operation) opencdc.Record {
 	atomic.AddInt32(&d.id, 1)
 
-	return sdk.Record{
+	return opencdc.Record{
 		Position:  nil,
 		Operation: operation,
 		Metadata: map[string]string{
 			metadataFieldTable: d.Config.SourceConfig[config.Table],
 		},
-		Key: sdk.StructuredData{
+		Key: opencdc.StructuredData{
 			"Int32Type": d.id,
 		},
-		Payload: sdk.Change{After: sdk.RawData(
+		Payload: opencdc.Change{After: opencdc.RawData(
 			fmt.Sprintf(`{"Int32Type":%d,"StringType":"%s"}`, d.id, uuid.NewString()),
 		)},
 	}
