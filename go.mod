@@ -5,7 +5,7 @@ go 1.22.5
 toolchain go1.22.6
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.28.1
+	github.com/ClickHouse/clickhouse-go/v2 v2.28.2
 	github.com/conduitio/conduit-commons v0.3.0
 	github.com/conduitio/conduit-connector-sdk v0.10.0
 	github.com/golangci/golangci-lint v1.60.3
