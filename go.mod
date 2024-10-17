@@ -3,7 +3,7 @@ module github.com/conduitio-labs/conduit-connector-clickhouse
 go 1.23.2
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.29.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.30.0
 	github.com/conduitio/conduit-commons v0.4.0
 	github.com/conduitio/conduit-connector-sdk v0.11.0
 	github.com/golangci/golangci-lint v1.61.0
@@ -37,7 +37,7 @@ require (
 	github.com/alexkohler/nakedret/v2 v2.0.4 // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
-	github.com/andybalholm/brotli v1.1.0 // indirect
+	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
