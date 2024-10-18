@@ -11,7 +11,7 @@ require (
 	github.com/huandu/go-sqlbuilder v1.30.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/matryer/is v1.4.1
-	go.uber.org/mock v0.4.0
+	go.uber.org/mock v0.5.0
 	go.uber.org/multierr v1.11.0
 )
 
