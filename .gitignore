@@ -7,3 +7,5 @@
 
 # Binary built with `make build`
 conduit-connector-clickhouse
+
+build

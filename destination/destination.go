@@ -37,6 +37,7 @@ type engineName string
 const (
 	mergeTree                    engineName = "MergeTree"
 	replacingMergeTree           engineName = "ReplacingMergeTree"
+	sharedReplacingMergeTree     engineName = "SharedReplacingMergeTree"
 	summingMergeTree             engineName = "SummingMergeTree"
 	aggregatingMergeTree         engineName = "AggregatingMergeTree"
 	collapsingMergeTree          engineName = "CollapsingMergeTree"
@@ -49,6 +50,7 @@ const (
 var engines = map[engineName]struct{}{
 	mergeTree:                    {},
 	replacingMergeTree:           {},
+	sharedReplacingMergeTree:     {},
 	summingMergeTree:             {},
 	aggregatingMergeTree:         {},
 	collapsingMergeTree:          {},
