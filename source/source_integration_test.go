@@ -344,8 +344,6 @@ func TestSource_Read_checkEngines(t *testing.T) {
 	}()
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			is := is.New(t)
 			cfg[config.Table] = tt.table
