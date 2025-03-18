@@ -6,7 +6,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.33.0
 	github.com/conduitio/conduit-commons v0.5.1
 	github.com/conduitio/conduit-connector-sdk v0.12.0
-	github.com/golangci/golangci-lint v1.64.7
+	github.com/golangci/golangci-lint v1.64.8
 	github.com/google/uuid v1.6.0
 	github.com/huandu/go-sqlbuilder v1.34.0
 	github.com/jmoiron/sqlx v1.4.0
