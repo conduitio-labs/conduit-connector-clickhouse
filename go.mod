@@ -2,8 +2,6 @@ module github.com/conduitio-labs/conduit-connector-clickhouse
 
 go 1.24.1
 
-toolchain go1.24.1
-
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.34.0
 	github.com/conduitio/conduit-commons v0.5.2
