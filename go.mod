@@ -10,7 +10,7 @@ require (
 	github.com/huandu/go-sqlbuilder v1.35.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/matryer/is v1.4.1
-	go.uber.org/mock v0.5.1
+	go.uber.org/mock v0.5.2
 	go.uber.org/multierr v1.11.0
 )
 
