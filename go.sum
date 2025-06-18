@@ -20,8 +20,8 @@ github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c h1:pxW6RcqyfI9/k
 github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/ClickHouse/ch-go v0.66.0 h1:hLslxxAVb2PHpbHr4n0d6aP8CEIpUYGMVT1Yj/Q5Img=
 github.com/ClickHouse/ch-go v0.66.0/go.mod h1:noiHWyLMJAZ5wYuq3R/K0TcRhrNA8h7o1AqHX0klEhM=
-github.com/ClickHouse/clickhouse-go/v2 v2.37.0 h1:Sk7760AFd+mQBN1ccj5/C+WpkWjnvhL8h5m8topl2UQ=
-github.com/ClickHouse/clickhouse-go/v2 v2.37.0/go.mod h1:1KKjGFSWu2R/oa7DKWJLlhTOtyCld7VJDEtXTe+2QKU=
+github.com/ClickHouse/clickhouse-go/v2 v2.37.1 h1:AvNJQW0QJudpl6JjH8WyMfu2s3ruWxtp0E1WZKmZXLc=
+github.com/ClickHouse/clickhouse-go/v2 v2.37.1/go.mod h1:1KKjGFSWu2R/oa7DKWJLlhTOtyCld7VJDEtXTe+2QKU=
 github.com/Crocmagnon/fatcontext v0.7.1 h1:SC/VIbRRZQeQWj/TcQBS6JmrXcfA+BU4OGSVUt54PjM=
 github.com/Crocmagnon/fatcontext v0.7.1/go.mod h1:1wMvv3NXEBJucFGfwOJBxSVWcoIO6emV215SMkW9MFU=
 github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 h1:sHglBQTwgx+rWPdisA5ynNEsoARbiCBOyGcJM4/OzsM=
